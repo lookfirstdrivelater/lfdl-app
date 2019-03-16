@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
-
+import 'package:flutter/services.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong/latlong.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:io';
+import 'package:location/location.dart';
 import 'dart:async';
-import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 void main() => runApp(MyApp());
 
@@ -47,6 +46,7 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   var httpResponse = "";
+  final mapController = MapController();
 
   _httpGetRequest() async {
     final url = "https://stupidcpu.com/ping";
@@ -61,11 +61,14 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Widget build(BuildContext context) {
-    return new Scaffold(
-      appBar: new AppBar(title: new Text("Home")),
-      body: new Padding(
-        padding: new EdgeInsets.all(8.0),
-        child: new Column(
+    Location()
+        .getLocation()
+        .then((location) => mapController.move(LatLng(location.latitude, location.longitude), mapController.zoom));
+    return Scaffold(
+      appBar: AppBar(title: Text("Home")),
+      body: Padding(
+        padding: EdgeInsets.all(8.0),
+        child: Column(
           children: [
             FlatButton(
               child: Text("Send Request"),
@@ -74,12 +77,13 @@ class _MyHomePageState extends State<MyHomePage> {
             Text("Ping: $httpResponse"),
             Flexible(
                 child: FlutterMap(
-              options: new MapOptions(
-                center: new LatLng(51.5, -0.09),
+              mapController: mapController,
+              options: MapOptions(
+                center: LatLng(51.5, -0.09),
                 zoom: 5.0,
               ),
               layers: [
-                new TileLayerOptions(
+                TileLayerOptions(
                     urlTemplate:
                         "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
                     subdomains: ['a', 'b', 'c']),
