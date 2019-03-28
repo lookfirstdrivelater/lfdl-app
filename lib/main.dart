@@ -3,10 +3,9 @@ import 'package:flutter/services.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong/latlong.dart';
 import 'package:http/http.dart' as http;
+import 'package:lfdl_app/GPS.dart';
 import 'dart:convert';
 import 'dart:io';
-import 'package:location/location.dart';
-import 'dart:async';
 
 void main() => runApp(MyApp());
 
@@ -14,6 +13,7 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
+
     return MaterialApp(
       title: 'Flutter Demo',
       theme: ThemeData(
@@ -46,10 +46,11 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   var httpResponse = "";
+
   final mapController = MapController();
 
-  _httpGetRequest() async {
-    final url = "https://stupidcpu.com/ping";
+  void _httpGetRequest() async {
+    final url = "https://stupidcpu.com/api/ping";
     HttpClient httpClient = new HttpClient();
     HttpClientRequest request = await httpClient.getUrl(Uri.parse(url));
     HttpClientResponse response = await request.close();
@@ -60,10 +61,12 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
+  void _centerMap() async {
+    final position = await GPS().location();
+    mapController.move(LatLng(position.latitude, position.longitude), 15.0);
+  }
+
   Widget build(BuildContext context) {
-    Location()
-        .getLocation()
-        .then((location) => mapController.move(LatLng(location.latitude, location.longitude), mapController.zoom));
     return Scaffold(
       appBar: AppBar(title: Text("Home")),
       body: Padding(
@@ -74,9 +77,13 @@ class _MyHomePageState extends State<MyHomePage> {
               child: Text("Send Request"),
               onPressed: _httpGetRequest,
             ),
+            FlatButton(
+              child: Text("Center Map"),
+              onPressed: _centerMap,
+            ),
             Text("Ping: $httpResponse"),
             Flexible(
-                child: FlutterMap(
+              child: FlutterMap(
               mapController: mapController,
               options: MapOptions(
                 center: LatLng(51.5, -0.09),

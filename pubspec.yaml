@@ -15,9 +15,12 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  flutter_map: any
+  flutter_map: '0.5.0'
   http: '>=0.11.3+12'
-  location: any
+  location: '^2.0.0'
+
+  json_annotation: '^2.0.0'
+#  geolocator: '3.0.1'
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
@@ -26,6 +29,9 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  build_runner: ^1.0.0
+  json_serializable: ^2.0.0
+
 
 
 # For information on the generic Dart part of this file, see the
