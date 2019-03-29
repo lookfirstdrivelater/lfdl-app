@@ -1,12 +1,14 @@
 import 'package:latlong/latlong.dart';
 import 'dart:convert';
-import 'package:json_annotation/json_annotation.dart';
-import 'package:json_serializable/type_helper.dart';
+//import 'package:json_annotation/json_annotation.dart';
+//import 'package:json_serializable/type_helper.dart';
+import 'package:convert/convert.dart';
+import 'package:dson/dson.dart';
 
-part 'RoadEvent.g.dart';
+part 'RoadEvent.g.dart'; // this line is needed for the generator
 
-@JsonSerializable(nullable: false)
-class RoadEvent {
+@serializable
+class RoadEvent extends _$RoadEventSerializable {
   RoadEvent(this.startTime, this.endTime, this.polyline, this.type, this.severity);
   final DateTime startTime;
   final DateTime endTime;
@@ -14,21 +16,20 @@ class RoadEvent {
   final List<EventType> type;
   final Severity severity;
 
-  factory RoadEvent.fromJson(Map<String, dynamic> json) => _$RoadEventFromJson(json);
-  Map<String, dynamic> toJson() => _$RoadEventToJson(this);
-
   Duration duration() => endTime.difference(startTime);
+
+  factory RoadEvent.fromJsonString(String json) => fromJson(json, RoadEvent);
+  String toJsonString() => toJson(this);
 }
-@JsonSerializable(nullable: false)
-class RoadLine {
-  RoadLine(this.start, this.end);
+
+@serializable
+class RoadLine extends _$RoadLineSerializable {
   RoadPoint start;
   RoadPoint end;
 }
 
-@JsonSerializable(nullable: false)
-class RoadPoint {
-  RoadPoint(this.latitude, this.longitude);
+@serializable
+class RoadPoint extends _$RoadPointSerializable {
   double latitude;
   double longitude;
 }
