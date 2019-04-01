@@ -1,7 +1,5 @@
 import 'package:latlong/latlong.dart';
 import 'dart:convert';
-//import 'package:json_annotation/json_annotation.dart';
-//import 'package:json_serializable/type_helper.dart';
 import 'package:convert/convert.dart';
 import 'package:dson/dson.dart';
 
