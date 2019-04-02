@@ -3,7 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong/latlong.dart';
 import 'package:http/http.dart' as http;
-import 'package:lfdl_app/GPS.dart';
+import 'package:lfdl_app/gps.dart';
 import 'dart:convert';
 import 'dart:io';
 
@@ -13,7 +13,6 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-
     return MaterialApp(
       title: 'Flutter Demo',
       theme: ThemeData(
@@ -28,26 +27,32 @@ class MyApp extends StatelessWidget {
         // is not restarted.
         primarySwatch: Colors.blue,
       ),
-      home: MyHomePage(title: 'Flutter Demo Home Page'),
+      home: HomePage(title: 'Flutter Demo Home Page'),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  MyHomePage({Key key, this.title}) : super(key: key);
+class HomePage extends StatefulWidget {
+  HomePage({Key key, this.title}) : super(key: key);
 
   final String title;
 
   static const String route = '/';
 
   @override
-  _MyHomePageState createState() => _MyHomePageState();
+  _HomePageState createState() => _HomePageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
+class _HomePageState extends State<HomePage> {
   var httpResponse = "";
 
   final mapController = MapController();
+
+  @override
+  void initState() {
+    super.initState();
+    _centerMap();
+  }
 
   void _httpGetRequest() async {
     final url = "https://stupidcpu.com/api/ping";
@@ -83,7 +88,7 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
             Text("Ping: $httpResponse"),
             Flexible(
-              child: FlutterMap(
+                child: FlutterMap(
               mapController: mapController,
               options: MapOptions(
                 center: LatLng(51.5, -0.09),

@@ -2,8 +2,8 @@ import 'package:latlong/latlong.dart';
 import 'dart:convert';
 import 'package:convert/convert.dart';
 import 'package:dson/dson.dart';
-
-part 'RoadEvent.g.dart'; // this line is needed for the generator
+import 'package:flutter/painting.dart';
+part 'road_event.g.dart'; // this line is needed for the generator
 
 @serializable
 class RoadEvent extends _$RoadEventSerializable {
@@ -31,6 +31,10 @@ class RoadPoint extends _$RoadPointSerializable {
   double latitude;
   double longitude;
 }
+
+//const eventColors = <EventType, Color> {
+//  EventType.snow: Color()
+//}
 
 enum EventType {
   snow,

@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'RoadEvent.dart';
+part of 'road_event.dart';
 
 // **************************************************************************
 // DsonGenerator
