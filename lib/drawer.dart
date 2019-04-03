@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:lfdl_app/pages/map_page.dart';
 import 'package:lfdl_app/pages/test_page.dart';
 import 'package:lfdl_app/pages/report_page.dart';
+
 Drawer buildDrawer(BuildContext context, String currentRoute) {
   return new Drawer(
     child: new ListView(
