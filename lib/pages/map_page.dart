@@ -16,22 +16,41 @@ class MapPage extends StatefulWidget {
 
 class MapPageState extends State<MapPage> {
   final mapController = MapController();
-  FlutterMap _map;
-  GPS gps = GPS();
+  final gps = GPS();
+  final polylines = List<Polyline>();
+
+  void addLine(List<LatLng> lines) {
+    final polyline = Polyline(points: lines);
+    polylines.add(polyline);
+  }
 
   void center() async {
     final position = await gps.location();
     mapController.move(position, 10.0);
   }
 
-//  void addLine(RoadLine line) {
-//    ;
-//  }
+  LatLng tappedPoint;
+  List<LatLng> lines = List();
+
+  void onTap(LatLng latLgn) {
+    setState(() {
+      tappedPoint = latLgn;
+      lines.add(tappedPoint);
+    });
+  }
+
+  void onLongPressed(LatLng latLng) {
+    setState(() {
+      addLine(lines);
+      lines = List();
+    });
+
+  }
 
   @override
   Widget build(BuildContext context) {
     return new Scaffold(
-      appBar: new AppBar(title: new Text("Home")),
+      appBar: new AppBar(title: new Text("Map")),
       drawer: buildDrawer(context, MapPage.route),
       body: new Padding(
         padding: new EdgeInsets.all(8.0),
@@ -45,14 +64,19 @@ class MapPageState extends State<MapPage> {
               child: new FlutterMap(
                 mapController: mapController,
                 options: MapOptions(
-                  center: LatLng(51.5, -0.09),
-                  zoom: 5.0,
+                    center: LatLng(51.5, -0.09),
+                    zoom: 5.0,
+                    onLongPress: onLongPressed,
+                    onTap: onTap
                 ),
                 layers: [
                   TileLayerOptions(
                       urlTemplate:
-                          "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+                      "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
                       subdomains: ['a', 'b', 'c']),
+                  PolylineLayerOptions(
+                    polylines: polylines,
+                  )
                 ],
               ),
             ),

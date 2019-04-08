@@ -30,7 +30,7 @@ class TestPageState extends State<TestPage> {
   @override
   void initState() {
     super.initState();
-    _centerMap();
+    centerMap();
   }
 
   void _httpGetRequest() async {
@@ -45,7 +45,8 @@ class TestPageState extends State<TestPage> {
     });
   }
 
-  void _centerMap() async {
+  void
+  centerMap() async {
     final position = await GPS().location();
     mapController.move(LatLng(position.latitude, position.longitude), 15.0);
   }
@@ -64,7 +65,7 @@ class TestPageState extends State<TestPage> {
             ),
             FlatButton(
               child: Text("Center Map"),
-              onPressed: _centerMap,
+              onPressed: centerMap,
             ),
             Text("Ping: $httpResponse"),
             Flexible(
