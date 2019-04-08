@@ -34,33 +34,35 @@ void main() {
 
       test('String List to LatLng List', () {
         final List<String> list = <String>[latLngStr1, latLngStr2, latLngStr3];
-        final List<LatLng> transformed = jsonToPolyline(list);
+        final List<LatLng> transformed = stringListToPolyline(list);
         expect(transformed, [latLng1, latLng2, latLng3]);
       });
     });
 
-    test('JSON Serialization', () {});
-
-    test('JSON Deserialization', () {
-      final deserializedRoadEvent = RoadEvent.fromJson('''
+    final roadEventJson = '''
           {
-              "startTime": "${DateTime.now().toIso8601String()}",
-              "endTime": "${DateTime.now().toIso8601String()}",
+              "startTime": "${DateTime(2019).toIso8601String()}",
+              "endTime": "${DateTime(2020).toIso8601String()}",
               "polyline": ["$latLngStr1", "$latLngStr2", "$latLngStr3"],
               "type": "${EventType.snow}",
               "severity": "${Severity.low}"
           }
-          ''');
+          ''';
 
-      final actualRoadEvent = RoadEvent(
-          startTime: DateTime.now(),
-          endTime: DateTime.now(),
-          polyline: [latLng1, latLng2, latLng3],
-          type: EventType.snow,
-          severity: Severity.low
-      );
+    final roadEvent = RoadEvent(
+        startTime: DateTime(2019),
+        endTime: DateTime(2020),
+        polyline: [latLng1, latLng2, latLng3],
+        type: EventType.snow,
+        severity: Severity.low
+    );
 
-      expect(deserializedRoadEvent, actualRoadEvent);
+    test('JSON Deserialization', () {
+      expect(RoadEvent.fromJson(roadEventJson), roadEvent);
+    });
+
+    test('JSON Serialization', () {
+      expect(RoadEvent.fromJson(roadEvent.toJson()), roadEvent);
     });
   });
 }

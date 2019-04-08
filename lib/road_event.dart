@@ -4,7 +4,7 @@ import 'package:convert/convert.dart';
 import 'package:flutter/painting.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'dart:core';
-import 'dart:developer';
+import 'package:queries/collections.dart';
 
 class RoadEvent {
   RoadEvent(
@@ -24,8 +24,8 @@ class RoadEvent {
 
     final DateTime startTime = DateTime.parse(jsonMap['startTime'] as String);
     final DateTime endTime = DateTime.parse(jsonMap['endTime'] as String);
-    final List<LatLng> polyline = jsonToPolyline(
-        jsonMap['polyline'].cast<String>());
+    final List<LatLng> polyline =
+    stringListToPolyline(jsonMap['polyline'].cast<String>());
     final EventType type = EventType.values
         .firstWhere((e) => e.toString() == jsonMap['type'] as String);
     final Severity severity = Severity.values
@@ -40,42 +40,53 @@ class RoadEvent {
   }
 
   @override
-  bool operator ==(other) {
-    other = other as RoadEvent;
-    return startTime == other.startTime &&
-        endTime == other.endTime &&
-        polyline == other.polyline &&
-        type == other.type &&
-        severity == other.severity;
+  bool operator ==(Object other) {
+    if(other is RoadEvent) {
+      if (!(startTime == other.startTime &&
+          endTime == other.endTime &&
+          type == other.type &&
+          severity == other.severity)) return false;
+      if (polyline.length != other.polyline.length) return false;
+        for (int i = 0; i < polyline.length; i++) {
+          if(polyline[i] != other.polyline[i]) return false;
+        }
+        return true;
+    } else return false;
   }
 
   String toJson() {
-    return jsonEncode(this);
-//    , toEncodable: (value) {
-//      if (value is DateTime) {  
-//        return value.toIso8601String();
-//      }
-//      if(value is List<LatLng>) {
-//        return value.map((latLng) => '(${latLng.latitude}, ${latLng.longitude}');
-//      }
-//      if(value is EventType || value is Severity) {
-//        return value.toString();
-//      }
-//    });
+    return '''
+    {
+        "startTime": "$startTime",
+        "endTime": "$endTime",
+        "polyline": ["${polylineToStringList(polyline).join('", "')}"],
+        "type": "$type",
+        "severity": "$severity"
+    }
+    ''';
   }
 
   @override
-  String toString() => toJson();
+  String toString() =>
+      "startTime: $startTime, endTime: $endTime, polyline: [${polyline.join(
+          ", ")}], type: $type, severity: $severity";
 }
 
 LatLng stringToLatLng(String string) {
   final match = latLngMatcher.firstMatch(string);
+  if(match == null) throw FormatException("Match not found in: $string");
   return LatLng(double.parse(match.group(1)), double.parse(match.group(2)));
 }
 
-List<LatLng> jsonToPolyline(List<String> json) {
+List<LatLng> stringListToPolyline(List<String> json) {
   return json.map(stringToLatLng).toList();
 }
+
+String latLngToString(LatLng latLng) =>
+    "(${latLng.latitude}, ${latLng.longitude})";
+
+List<String> polylineToStringList(List<LatLng> polyline) =>
+    polyline.map((latLng) => latLngToString(latLng)).toList();
 
 const numberPattern = r'-?\d{1,3}(?:\.\d{1,9})?';
 
