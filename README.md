@@ -9,14 +9,10 @@ Tags:
   Definition: Adding new features or functionality  
   General Format: \[add] Added {name of function/feature} feature/function for {purpose}  
   Example: [add] Added sendHttpRequest function  
-\[edit]  
-  Definition: Editing files or functions in such a way that does not add new functionality or features  
-  General format: \[edit] Edited {name of function/file} function/file for {non-functional purpose}  
-  Example: [edit] Optimized sendHttpRequest function so it worked asynchronously  
 \[update]
-  Definition: Changing files so they include information that is more up to date   
-  General formate: \[update] Changed {name of file} file to include more info on {info}  
-  Example: \[update] Changed the README file to include the commit message format  
+  Definition: Making improvements that improve, but does not add functionality 
+  General format: \[update] Improved {name of function/file} function/file to be more efficent  
+  Example: [edit] Optimized sendHttpRequest function so it worked asynchronously  
 \[create]  
   Definition: Creating new files or classes  
   General format: \[create] Created {name of file/class} file/class for {purpose}  
