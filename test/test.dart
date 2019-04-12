@@ -20,32 +20,47 @@ void main() {
     final latLng2 = LatLng(-90, -180);
     final latLng3 = LatLng(0.123456789, 9.876543210);
 
-    group('Polyline Matching', () {
-      test('LatLng Matching', () {
-        expect(latLngMatcher.hasMatch(latLngStr1), true);
-        expect(stringToLatLng(latLngStr1), latLng1);
+    test('LatLng Matching', () {
+      expect(latLngMatcher.hasMatch(latLngStr1), true);
+      expect(stringToLatLng(latLngStr1), latLng1);
 
-        expect(latLngMatcher.hasMatch(latLngStr2), true);
-        expect(stringToLatLng(latLngStr2), latLng2);
+      expect(latLngMatcher.hasMatch(latLngStr2), true);
+      expect(stringToLatLng(latLngStr2), latLng2);
 
-        expect(latLngMatcher.hasMatch(latLngStr3), true);
-        expect(stringToLatLng(latLngStr3), latLng3);
-      });
-
-      test('String List to LatLng List', () {
-        final List<String> list = <String>[latLngStr1, latLngStr2, latLngStr3];
-        final List<LatLng> transformed = stringListToPolyline(list);
-        expect(transformed, [latLng1, latLng2, latLng3]);
-      });
+      expect(latLngMatcher.hasMatch(latLngStr3), true);
+      expect(stringToLatLng(latLngStr3), latLng3);
     });
 
-    final roadEventJson = '''
+    test('String List to LatLng List', () {
+      final List<String> list = <String>[latLngStr1, latLngStr2, latLngStr3];
+      final List<LatLng> transformed = stringListToPolyline(list);
+      expect(transformed, [latLng1, latLng2, latLng3]);
+    });
+
+    test('EventType to and from strings', () {
+      final eventTypes = EventType.values;
+      for(int i = 0; i < eventTypes.length; i++) {
+        expect(stringToEventType[eventTypeStrings[i]], eventTypes[i]);
+        expect(eventTypeToString[eventTypes[i]], eventTypeStrings[i]);
+      }
+    });
+
+    test('Severity to and form strings', () {
+      final severities = Severity.values;
+      for(int i = 0; i < severities.length; i++) {
+        expect(stringToSeverity[severityStrings[i]], severities[i]);
+        expect(severityToString[severities[i]], severityStrings[i]);
+      }
+    });
+
+    final roadEventJson =
+    '''
           {
               "startTime": "${DateTime(2019).toIso8601String()}",
-              "endTime": "${DateTime(2020).toIso8601String()}",
+              "endTime": "${DateTime(2020).toString()}",
               "polyline": ["$latLngStr1", "$latLngStr2", "$latLngStr3"],
-              "type": "${EventType.snow}",
-              "severity": "${Severity.low}"
+              "type": "snow",
+              "severity": "low"
           }
           ''';
 

@@ -26,10 +26,8 @@ class RoadEvent {
     final DateTime endTime = DateTime.parse(jsonMap['endTime'] as String);
     final List<LatLng> polyline =
     stringListToPolyline(jsonMap['polyline'].cast<String>());
-    final EventType type = EventType.values
-        .firstWhere((e) => e.toString() == jsonMap['type'] as String);
-    final Severity severity = Severity.values
-        .firstWhere((e) => e.toString() == jsonMap['severity'] as String);
+    final EventType type = stringToEventType[jsonMap['type']];
+    final Severity severity = stringToSeverity[jsonMap['severity']];
 
     return RoadEvent(
         startTime: startTime,
@@ -60,8 +58,8 @@ class RoadEvent {
         "startTime": "$startTime",
         "endTime": "$endTime",
         "polyline": ["${polylineToStringList(polyline).join('", "')}"],
-        "type": "$type",
-        "severity": "$severity"
+        "type": "${eventTypeToString[type]}",
+        "severity": "${severityToString[severity]}"
     }
     ''';
   }
@@ -96,6 +94,23 @@ final latLngMatcher = RegExp('^\\(($numberPattern), ?($numberPattern)\\)\$');
 //  EventType.snow: Color()
 //}
 
+String enumToString(dynamic enumeration ) {
+  final string = enumeration.toString();
+  return string.substring(string.indexOf('.') + 1);
+}
+
 enum EventType { snow, ice, blackIce, slush }
 
+final eventTypeStrings = EventType.values.map(enumToString).toList();
+
+final eventTypeToString = Map.fromIterables(EventType.values, eventTypeStrings);
+
+final stringToEventType = Map.fromIterables(eventTypeStrings, EventType.values);
+
 enum Severity { low, medium, high }
+
+final severityStrings = Severity.values.map(enumToString).toList();
+
+final stringToSeverity = Map.fromIterables(severityStrings, Severity.values);
+
+final severityToString = Map.fromIterables(Severity.values, severityStrings);

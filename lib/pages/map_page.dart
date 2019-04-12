@@ -19,7 +19,7 @@ class MapPageState extends State<MapPage> {
   final gps = GPS();
   final polylines = List<Polyline>();
 
-  void addLine(List<LatLng> lines) {
+  void addPolyline(List<LatLng> lines) {
     final polyline = Polyline(points: lines);
     polylines.add(polyline);
   }
@@ -39,12 +39,19 @@ class MapPageState extends State<MapPage> {
     });
   }
 
+  void addRoadEvents(List<RoadEvent> events) {
+    setState(() {
+      for (RoadEvent event in events) {
+        polylines.add(Polyline(points: event.polyline, color: eventColors[event.type]));
+      }
+    });
+  }
+
   void onLongPressed(LatLng latLng) {
     setState(() {
-      addLine(lines);
+      addPolyline(lines);
       lines = List();
     });
-
   }
 
   @override
@@ -86,3 +93,10 @@ class MapPageState extends State<MapPage> {
     );
   }
 }
+
+const eventColors = <EventType, Color> {
+  EventType.snow: Color(0xFFFFFFFF),
+  EventType.blackIce: Color(0xFF000000),
+  EventType.slush: Color(0xFFFFFF00),
+  EventType.ice: Color(0xFF00FFFF)
+};
