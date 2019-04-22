@@ -10,6 +10,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:lfdl_app/road_event.dart';
 import 'package:lfdl_app/main.dart';
 import 'package:latlong/latlong.dart';
+import 'package:lfdl_app/utils.dart';
+import 'package:lfdl_app/http.dart';
 
 void main() {
   group('Road Event', () {
@@ -22,55 +24,56 @@ void main() {
 
     test('LatLng Matching', () {
       expect(latLngMatcher.hasMatch(latLngStr1), true);
-      expect(stringToLatLng(latLngStr1), latLng1);
+      expect(latLngMatcher.firstMatch(latLngStr1).group(0), latLngStr1);
 
       expect(latLngMatcher.hasMatch(latLngStr2), true);
-      expect(stringToLatLng(latLngStr2), latLng2);
+      expect(latLngMatcher.firstMatch(latLngStr2).group(0), latLngStr2);
 
       expect(latLngMatcher.hasMatch(latLngStr3), true);
-      expect(stringToLatLng(latLngStr3), latLng3);
+      expect(latLngMatcher.firstMatch(latLngStr3).group(0), latLngStr3);
     });
 
-    test('String List to LatLng List', () {
-      final List<String> list = <String>[latLngStr1, latLngStr2, latLngStr3];
-      final List<LatLng> transformed = stringListToPolyline(list);
+    test('String points to LatLng points', () {
+      final String string = '"$latLngStr1, $latLngStr2, $latLngStr3"';
+      final List<LatLng> transformed = stringToPoints(string);
       expect(transformed, [latLng1, latLng2, latLng3]);
     });
 
     test('EventType to and from strings', () {
       final eventTypes = EventType.values;
       for(int i = 0; i < eventTypes.length; i++) {
-        expect(stringToEventType[eventTypeStrings[i]], eventTypes[i]);
-        expect(eventTypeToString[eventTypes[i]], eventTypeStrings[i]);
+        expect(stringToEventType(eventTypeStrings[i]), eventTypes[i]);
+        expect(eventTypeToString(eventTypes[i]), eventTypeStrings[i]);
       }
     });
 
     test('Severity to and form strings', () {
       final severities = Severity.values;
       for(int i = 0; i < severities.length; i++) {
-        expect(stringToSeverity[severityStrings[i]], severities[i]);
-        expect(severityToString[severities[i]], severityStrings[i]);
+        expect(stringToSeverity(severityStrings[i]), severities[i]);
+        expect(severityToString(severities[i]), severityStrings[i]);
       }
     });
+
+    final roadEvent = RoadEvent(
+        startTime: DateTime.utc(2019),
+        endTime: DateTime.utc(2020),
+        points: [latLng1, latLng2, latLng3],
+        type: EventType.snow,
+        severity: Severity.low
+    );
 
     final roadEventJson =
     '''
           {
-              "startTime": "${DateTime(2019).toIso8601String()}",
-              "endTime": "${DateTime(2020).toString()}",
-              "polyline": ["$latLngStr1", "$latLngStr2", "$latLngStr3"],
-              "type": "snow",
-              "severity": "low"
+              "StartTime": "${roadEvent.startTime}",
+              "EndTime": "${roadEvent.endTime}",
+              "Points": "${pointsToString(roadEvent.points)}",
+              "Type": "${eventTypeToString(roadEvent.type)}",
+              "Severity": "${severityToString(roadEvent.severity)}"
           }
-          ''';
+    ''';
 
-    final roadEvent = RoadEvent(
-        startTime: DateTime(2019),
-        endTime: DateTime(2020),
-        polyline: [latLng1, latLng2, latLng3],
-        type: EventType.snow,
-        severity: Severity.low
-    );
 
     test('JSON Deserialization', () {
       expect(RoadEvent.fromJson(roadEventJson), roadEvent);
@@ -78,6 +81,22 @@ void main() {
 
     test('JSON Serialization', () {
       expect(RoadEvent.fromJson(roadEvent.toJson()), roadEvent);
+    });
+
+    final roadEventUrl =
+        '${Http.serverUrl}/createevent?'
+        'startTime=${roadEvent.startTime}&'
+        'endTime=${roadEvent.endTime}&'
+        'points=${pointsToString(roadEvent.points)}&'
+        'type=${eventTypeToString(roadEvent.type)}&'
+        'severity=${severityToString(roadEvent.severity)}&'
+        'top=${roadEvent.top()}&'
+        'bottom=${roadEvent.bottom()}&'
+        'right=${roadEvent.right()}&'
+        'left=${roadEvent.left()}';
+
+    test('Post Request Url', () {
+//      expect()
     });
   });
 }

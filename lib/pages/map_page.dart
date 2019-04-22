@@ -17,86 +17,129 @@ class MapPage extends StatefulWidget {
 class MapPageState extends State<MapPage> {
   final mapController = MapController();
   final gps = GPS();
-  final polylines = List<Polyline>();
+  final mapPolylines = List<Polyline>();
+  final circles = List<CircleMarker>();
 
-  void addPolyline(List<LatLng> lines) {
-    final polyline = Polyline(points: lines);
-    polylines.add(polyline);
+  @override
+  void initState() {
+    super.initState();
+    centerMapOnLocation();
   }
 
-  void center() async {
+  List<CircleMarker> emptyCircleMarkerList = List(0);
+
+  List<CircleMarker> getCircleMarkers() {
+    return roadEvent?.points
+        ?.map((point) =>
+        CircleMarker(point: point, radius: 10.0))
+        ?.toList() ?? emptyCircleMarkerList;
+  }
+
+  void centerMapOnLocation() async {
     final position = await gps.location();
-    mapController.move(position, 10.0);
-  }
-
-  LatLng tappedPoint;
-  List<LatLng> lines = List();
-
-  void onTap(LatLng latLgn) {
-    setState(() {
-      tappedPoint = latLgn;
-      lines.add(tappedPoint);
-    });
+    mapController.move(position, 15.0);
   }
 
   void addRoadEvents(List<RoadEvent> events) {
     setState(() {
       for (RoadEvent event in events) {
-        polylines.add(Polyline(points: event.polyline, color: eventColors[event.type]));
+        mapPolylines.add(Polyline(
+          points: event.points,
+          color: eventColors[event.type],
+          strokeWidth: 2.0,
+        ));
       }
     });
   }
 
-  void onLongPressed(LatLng latLng) {
-    setState(() {
-      addPolyline(lines);
-      lines = List();
-    });
+  RoadEvent roadEvent;
+
+  void onTap(LatLng latLgn) {
+    if (roadEvent != null) {
+      setState(() {
+        roadEvent.points.add(latLgn);
+      });
+    }
+  }
+
+  void onStartRoadPressed() {
+    if (roadEvent == null) {
+      roadEvent = RoadEvent(
+        points: List(),
+        type: EventType.snow,
+      );
+      mapPolylines.add(roadEvent.toPolyline());
+    }
+  }
+
+  void onEndRoadPressed() {
+    if (roadEvent != null) {
+      setState(() {
+        roadEvent = null;
+      });
+    }
+  }
+
+  void onUndoPressed() {
+    if (roadEvent != null) {
+      setState(() {
+//        circles.removeLast();
+        roadEvent.points.removeLast();
+      });
+    } else if(mapPolylines.length != 0){
+      mapPolylines.removeLast();
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    return new Scaffold(
-      appBar: new AppBar(title: new Text("Map")),
+    return Scaffold(
+      appBar: AppBar(title: Text("Map")),
       drawer: buildDrawer(context, MapPage.route),
-      body: new Padding(
-        padding: new EdgeInsets.all(8.0),
-        child: new Column(
+      body: Scrollbar(
+          child: Padding(
+        padding: EdgeInsets.all(8.0),
+        child: Column(
           children: [
-            new Padding(
-              padding: new EdgeInsets.only(top: 8.0, bottom: 8.0),
-              child: new Text("This is a map that is showing (51.5, -0.9)."),
-            ),
-            new Flexible(
-              child: new FlutterMap(
+            Padding(
+                padding: EdgeInsets.only(top: 8.0, bottom: 8.0),
+                child: Column(children: [
+                  FlatButton(
+                      onPressed: onStartRoadPressed,
+                      child: Text("Start Road Event")),
+                  FlatButton(
+                      onPressed: onEndRoadPressed,
+                      child: Text("End Road Event")),
+                  FlatButton(
+                    onPressed: onUndoPressed,
+                    child: Text("Undo"),
+                  ),
+                  FlatButton(
+                    onPressed: centerMapOnLocation,
+                    child: Text("Center Around Person"),
+                  ),
+                ])),
+            Flexible(
+              child: FlutterMap(
                 mapController: mapController,
-                options: MapOptions(
-                    center: LatLng(51.5, -0.09),
-                    zoom: 5.0,
-                    onLongPress: onLongPressed,
-                    onTap: onTap
-                ),
+                options: MapOptions(onTap: onTap),
                 layers: [
                   TileLayerOptions(
                       urlTemplate:
-                      "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+                          "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
                       subdomains: ['a', 'b', 'c']),
                   PolylineLayerOptions(
-                    polylines: polylines,
-                  )
+                    polylines:
+                        mapPolylines,
+                  ),
+                  CircleLayerOptions(
+                      circles: getCircleMarkers())
                 ],
               ),
             ),
           ],
         ),
-      ),
+      )),
     );
   }
 }
-
-const eventColors = <EventType, Color> {
-  EventType.snow: Color(0xFFFFFFFF),
-  EventType.blackIce: Color(0xFF000000),
-  EventType.slush: Color(0xFFFFFF00),
-  EventType.ice: Color(0xFF00FFFF)
-};

@@ -5,112 +5,102 @@ import 'package:flutter/painting.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'dart:core';
 import 'package:queries/collections.dart';
+import 'utils.dart';
+import 'dart:math';
+
 
 class RoadEvent {
-  RoadEvent(
-      {this.startTime, this.endTime, this.polyline, this.type, this.severity});
+  DateTime startTime;
+  DateTime endTime;
+  List<LatLng> points;
+  EventType type;
+  Severity severity;
 
-  final DateTime startTime;
-  final DateTime endTime;
-  final List<LatLng> polyline;
-  final EventType type;
-  final Severity severity;
+  RoadEvent(
+      {this.startTime, this.endTime, this.points, this.type, this.severity});
+
+  RoadEvent.fromJson(String json) {
+    final jsonMap = jsonDecode(json);
+    startTime = DateTime.parse(jsonMap['StartTime']);
+    endTime = DateTime.parse(jsonMap['EndTime']);
+    points = stringToPoints(jsonMap['Points']);
+    type = stringToEventType(jsonMap['Type']);
+    severity = stringToSeverity(jsonMap['Severity']);
+  }
 
   Duration duration() => endTime.difference(startTime);
 
-  //TODO: make this more efficient
-  factory RoadEvent.fromJson(String json) {
-    final jsonMap = jsonDecode(json);
+  double top() => points.fold(points[0].latitude, (acc, point) => max(acc, point.latitude));
 
-    final DateTime startTime = DateTime.parse(jsonMap['startTime'] as String);
-    final DateTime endTime = DateTime.parse(jsonMap['endTime'] as String);
-    final List<LatLng> polyline =
-    stringListToPolyline(jsonMap['polyline'].cast<String>());
-    final EventType type = stringToEventType[jsonMap['type']];
-    final Severity severity = stringToSeverity[jsonMap['severity']];
+  double bottom() => points.fold(points[0].latitude, (acc, point) => min(acc, point.latitude));
 
-    return RoadEvent(
-        startTime: startTime,
-        endTime: endTime,
-        polyline: polyline,
-        type: type,
-        severity: severity);
-  }
+  double right() => points.fold(points[0].longitude, (acc, point) => max(acc, point.longitude));
+
+  double left() => points.fold(points[0].longitude, (acc, point) => min(acc, point.longitude));
+
+  Polyline toPolyline() =>
+      Polyline(points: points, color: eventColors[type], strokeWidth: 2.0);
 
   @override
-  bool operator ==(Object other) {
-    if(other is RoadEvent) {
-      if (!(startTime == other.startTime &&
-          endTime == other.endTime &&
-          type == other.type &&
-          severity == other.severity)) return false;
-      if (polyline.length != other.polyline.length) return false;
-        for (int i = 0; i < polyline.length; i++) {
-          if(polyline[i] != other.polyline[i]) return false;
-        }
-        return true;
-    } else return false;
-  }
+  bool operator ==(dynamic other) =>
+      other is RoadEvent &&
+      startTime == other.startTime &&
+      endTime == other.endTime &&
+      type == other.type &&
+      severity == other.severity &&
+      listEquals(points, other.points);
 
   String toJson() {
     return '''
     {
-        "startTime": "$startTime",
-        "endTime": "$endTime",
-        "polyline": ["${polylineToStringList(polyline).join('", "')}"],
-        "type": "${eventTypeToString[type]}",
-        "severity": "${severityToString[severity]}"
+        "StartTime": "${startTime.toIso8601String()}",
+        "EndTime": "${endTime.toIso8601String()}",
+        "Points": "${pointsToString(points)}",
+        "Type": "${eventTypeToString(type)}",
+        "Severity": "${severityToString(severity)}"
     }
     ''';
   }
 
   @override
   String toString() =>
-      "startTime: $startTime, endTime: $endTime, polyline: [${polyline.join(
-          ", ")}], type: $type, severity: $severity";
+      'StartTime: $startTime, EndTime: $endTime, Points: ${pointsToString(points)}, Type: $type, Severity: $severity';
 }
 
-LatLng stringToLatLng(String string) {
-  final match = latLngMatcher.firstMatch(string);
-  if(match == null) throw FormatException("Match not found in: $string");
-  return LatLng(double.parse(match.group(1)), double.parse(match.group(2)));
-}
+const eventColors = <EventType, Color>{
+  EventType.snow: Color(0xFFFFFFFF),
+  EventType.blackIce: Color(0xFF000000),
+  EventType.slush: Color(0xFFFFFF00),
+  EventType.ice: Color(0xFF00FFFF)
+};
 
-List<LatLng> stringListToPolyline(List<String> json) {
-  return json.map(stringToLatLng).toList();
-}
-
-String latLngToString(LatLng latLng) =>
-    "(${latLng.latitude}, ${latLng.longitude})";
-
-List<String> polylineToStringList(List<LatLng> polyline) =>
-    polyline.map((latLng) => latLngToString(latLng)).toList();
-
-const numberPattern = r'-?\d{1,3}(?:\.\d{1,9})?';
-
-final latLngMatcher = RegExp('^\\(($numberPattern), ?($numberPattern)\\)\$');
-
-//const eventColors = <EventType, Color> {
-//  EventType.snow: Color()
-//}
-
-String enumToString(dynamic enumeration ) {
+String _enumToString(dynamic enumeration) {
   final string = enumeration.toString();
   return string.substring(string.indexOf('.') + 1);
 }
 
 enum EventType { snow, ice, blackIce, slush }
 
-final eventTypeStrings = EventType.values.map(enumToString).toList();
+final eventTypeStrings = EventType.values.map(_enumToString).toList();
 
-final eventTypeToString = Map.fromIterables(EventType.values, eventTypeStrings);
+final _eventTypeStringMap =
+    Map.fromIterables(EventType.values, eventTypeStrings);
 
-final stringToEventType = Map.fromIterables(eventTypeStrings, EventType.values);
+final _stringEventTypeMap =
+    Map.fromIterables(eventTypeStrings, EventType.values);
+
+String eventTypeToString(EventType eventType) => _eventTypeStringMap[eventType];
+
+EventType stringToEventType(String string) => _stringEventTypeMap[string];
 
 enum Severity { low, medium, high }
 
-final severityStrings = Severity.values.map(enumToString).toList();
+final severityStrings = Severity.values.map(_enumToString).toList();
 
-final stringToSeverity = Map.fromIterables(severityStrings, Severity.values);
+final _stringSeverityMap = Map.fromIterables(severityStrings, Severity.values);
 
-final severityToString = Map.fromIterables(Severity.values, severityStrings);
+final _severityStringMap = Map.fromIterables(Severity.values, severityStrings);
+
+String severityToString(Severity severity) => _severityStringMap[severity];
+
+Severity stringToSeverity(String string) => _stringSeverityMap[string];

@@ -18,9 +18,9 @@ class ReportPage extends StatefulWidget {
 
 class ReportPageState extends State<ReportPage> {
 
-  int snowCounter;
-  int iceCounter;
-  int slushCounter;
+  int snowCounter = 0;
+  int iceCounter = 0;
+  int slushCounter = 0;
 
   final mapController = MapController();
   FlutterMap _map;
@@ -90,7 +90,7 @@ class ReportPageState extends State<ReportPage> {
                 ],
               ),
             ),
-            new Text("$snowCounter, " + "$iceCounter, " + "$slushCounter")
+            new Text("snow: $snowCounter, ice: $iceCounter, slush: $slushCounter")
           ],
         ),
       ),

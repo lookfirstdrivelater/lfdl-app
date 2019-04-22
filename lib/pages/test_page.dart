@@ -45,8 +45,7 @@ class TestPageState extends State<TestPage> {
     });
   }
 
-  void
-  centerMap() async {
+  void centerMap() async {
     final position = await GPS().location();
     mapController.move(LatLng(position.latitude, position.longitude), 15.0);
   }
