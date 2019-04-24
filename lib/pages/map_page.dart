@@ -5,6 +5,7 @@ import 'package:lfdl_app/road_event.dart';
 import 'package:flutter/material.dart';
 import '../drawer.dart';
 import 'package:latlong/latlong.dart';
+import 'package:lfdl_app/http.dart';
 
 //Map display page
 class MapPage extends StatefulWidget {
@@ -22,6 +23,22 @@ class MapPageState extends State<MapPage> {
 
   @override
   void initState() {
+    final reportEvent = ReportEvent(
+        startTime: DateTime.utc(2019),
+        endTime: DateTime.utc(2000),
+        points: [
+          LatLng(90, 180),
+          LatLng(-90, -180),
+          LatLng(0.123456789, 9.876543210),
+        ],
+        type: EventType.snow,
+        severity: Severity.low
+    );
+
+    final createdReportEvent = Http.uploadRoadEvent(reportEvent).catchError((err) {
+      print(err);
+    });
+
     super.initState();
     centerMapOnLocation();
   }
@@ -29,7 +46,7 @@ class MapPageState extends State<MapPage> {
   List<CircleMarker> emptyCircleMarkerList = List(0);
 
   List<CircleMarker> getCircleMarkers() {
-    return roadEvent?.points
+    return reportEvent?.points
         ?.map((point) =>
         CircleMarker(point: point, radius: 10.0))
         ?.toList() ?? emptyCircleMarkerList;
@@ -52,39 +69,39 @@ class MapPageState extends State<MapPage> {
     });
   }
 
-  RoadEvent roadEvent;
+  ReportEvent reportEvent;
 
   void onTap(LatLng latLgn) {
-    if (roadEvent != null) {
+    if (reportEvent != null) {
       setState(() {
-        roadEvent.points.add(latLgn);
+        reportEvent.points.add(latLgn);
       });
     }
   }
 
   void onStartRoadPressed() {
-    if (roadEvent == null) {
-      roadEvent = RoadEvent(
+    if (reportEvent == null) {
+      reportEvent = ReportEvent(
         points: List(),
         type: EventType.snow,
       );
-      mapPolylines.add(roadEvent.toPolyline());
+      mapPolylines.add(reportEvent.toPolyline());
     }
   }
 
   void onEndRoadPressed() {
-    if (roadEvent != null) {
+    if (reportEvent != null) {
       setState(() {
-        roadEvent = null;
+        reportEvent = null;
       });
     }
   }
 
   void onUndoPressed() {
-    if (roadEvent != null) {
+    if (reportEvent != null) {
       setState(() {
 //        circles.removeLast();
-        roadEvent.points.removeLast();
+        reportEvent.points.removeLast();
       });
     } else if(mapPolylines.length != 0){
       mapPolylines.removeLast();
