@@ -37,9 +37,7 @@ class ReportPageState extends State<ReportPage> {
       appBar: AppBar(
         title: Text("Report"),
         actions: <Widget>[
-          IconButton(
-            icon: Icon(Icons.add),
-            tooltip: 'Add a new report',
+          FlatButton(
             onPressed: (){
               setState(() {
                 currentCondition = null;
@@ -48,6 +46,29 @@ class ReportPageState extends State<ReportPage> {
                 lastSeverity = null;
               });
             },
+            padding: EdgeInsets.all(8.0),
+            color: Colors.white,
+            child: Row(
+              children: <Widget>[
+                Icon(Icons.add),
+                Text('New event')
+              ],
+            ),
+          ),
+          FlatButton(
+            onPressed: (){
+              setState(() {
+                //TODO: Add submitting functionality
+              });
+            },
+            padding: EdgeInsets.all(8.0),
+            color: Colors.white,
+            child: Row(
+              children: <Widget>[
+                Icon(Icons.check),
+                Text('Submit event')
+              ],
+            ),
           ),
         ],
       ),
