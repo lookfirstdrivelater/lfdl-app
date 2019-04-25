@@ -7,7 +7,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:lfdl_app/road_event.dart';
+import 'package:lfdl_app/events.dart';
 import 'package:lfdl_app/main.dart';
 import 'package:latlong/latlong.dart';
 import 'package:lfdl_app/utils.dart';
@@ -41,7 +41,7 @@ void main() {
 
     test('EventType to and from strings', () {
       final eventTypes = EventType.values;
-      for(int i = 0; i < eventTypes.length; i++) {
+      for (int i = 0; i < eventTypes.length; i++) {
         expect(stringToEventType(eventTypeStrings[i]), eventTypes[i]);
         expect(eventTypeToString(eventTypes[i]), eventTypeStrings[i]);
       }
@@ -49,23 +49,25 @@ void main() {
 
     test('Severity to and form strings', () {
       final severities = Severity.values;
-      for(int i = 0; i < severities.length; i++) {
+      for (int i = 0; i < severities.length; i++) {
         expect(stringToSeverity(severityStrings[i]), severities[i]);
         expect(severityToString(severities[i]), severityStrings[i]);
       }
     });
 
-    final roadEvent = RoadEvent(
-        startTime: DateTime.utc(2019),
-        endTime: DateTime.utc(2020),
-        points: [latLng1, latLng2, latLng3],
-        type: EventType.snow,
-        severity: Severity.low
-    );
+    final points = [latLng1, latLng2, latLng3];
 
-    final roadEventJson =
-    '''
+    final roadEvent = RoadEvent(
+        id: 1,
+        startTime: DateTime.utc(2019),
+        endTime: DateTime.utc(2019).add(severityDuration(Severity.low)),
+        points: points,
+        type: EventType.snow,
+        severity: Severity.low);
+
+    final roadEventJson = '''
           {
+              "Id": ${roadEvent.id},
               "StartTime": "${roadEvent.startTime}",
               "EndTime": "${roadEvent.endTime}",
               "Points": "${pointsToString(roadEvent.points)}",
@@ -74,26 +76,30 @@ void main() {
           }
     ''';
 
-
-    test('JSON Deserialization', () {
+    test('RoadEvent JSON Deserialization', () {
       expect(RoadEvent.fromJson(roadEventJson), roadEvent);
     });
 
-    test('JSON Serialization', () {
-      expect(RoadEvent.fromJson(roadEvent.toJson()), roadEvent);
+    final reportEvent = ReportEvent(
+        startTime: DateTime.utc(2019),
+        points: points,
+        type: EventType.snow,
+        severity: Severity.low);
+
+    test('Upload Report Event', () async {
+      final createdReportEvent = await Http.uploadRoadEvent(reportEvent);
+      expect(createdReportEvent, reportEvent);
     });
 
-    final roadEventUrl =
-        '${Http.serverUrl}/createevent?'
-        'startTime=${roadEvent.startTime}&'
-        'endTime=${roadEvent.endTime}&'
-        'points=${pointsToString(roadEvent.points)}&'
-        'type=${eventTypeToString(roadEvent.type)}&'
-        'severity=${severityToString(roadEvent.severity)}&'
-        'top=${roadEvent.top()}&'
-        'bottom=${roadEvent.bottom()}&'
-        'right=${roadEvent.right()}&'
-        'left=${roadEvent.left()}';
+//    final roadEventUrl =
+//        '${Http.serverUrl}/createevent?'
+//        'startTime=${roadEvent.startTime}&'
+//        'endTime=${roadEvent.endTime}&'
+//        'points=${pointsToString(roadEvent.points)}&'
+//        'type=${eventTypeToString(roadEvent.type)}&'
+//        'severity=${severityToString(roadEvent.severity)}&'
+//        'centerX=${roadEvent.}&'
+//        '';
 
     test('Post Request Url', () {
 //      expect()
