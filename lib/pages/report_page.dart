@@ -21,6 +21,10 @@ class ReportPageState extends State<ReportPage> {
   int snowCounter = 0;
   int iceCounter = 0;
   int slushCounter = 0;
+  String currentCondition = null;
+  String lastCondition = null;
+  String currentSeverity = null;
+  String lastSeverity = null;
 
   final mapController = MapController();
   FlutterMap _map;
@@ -67,16 +71,56 @@ class ReportPageState extends State<ReportPage> {
         ],
       ),
       drawer: buildDrawer(context, ReportPage.route),
-      body: new Padding(
-        padding: new EdgeInsets.all(8.0),
-        child: new Column(
+      body: Padding(
+        padding: EdgeInsets.all(8.0),
+        child: Column(
           children: [
-            new Padding(
-              padding: new EdgeInsets.only(top: 8.0, bottom: 8.0),
-              child: new Text("This is a map that is showing (51.5, -0.9)."),
+            Padding(
+              padding: EdgeInsets.only(top: 8.0, bottom: 8.0),
+              child: DropdownButton<String>(
+                value: currentCondition,
+                onChanged: (String newValue) {
+                  setState(() {
+                    lastCondition = currentCondition;
+                    currentCondition = newValue;
+                  });
+                },
+                items: <String>['Snow', 'Ice', 'Slush', 'Black Ice']
+                    .map<DropdownMenuItem<String>>((String value) {
+                  return DropdownMenuItem<String>(
+                    value: value,
+                    child: Text(value),
+                  );
+                })
+                    .toList(),
+                isExpanded: true,
+                hint: Text("Select event type here")
+              ),
             ),
-            new Flexible(
-              child: new FlutterMap(
+            Padding(
+              padding: EdgeInsets.only(top: 8.0, bottom: 8.0),
+              child: DropdownButton<String>(
+                value: currentSeverity,
+                onChanged: (String newValue) {
+                  setState(() {
+                    lastSeverity = currentSeverity;
+                    currentSeverity = newValue;
+                  });
+                },
+                items: <String>['Low', 'Medium', 'High']
+                    .map<DropdownMenuItem<String>>((String value) {
+                  return DropdownMenuItem<String>(
+                    value: value,
+                    child: Text(value),
+                  );
+                })
+                    .toList(),
+                isExpanded: true,
+                hint: Text("Select severity type here")
+              ),
+            ),
+            Flexible(
+              child: FlutterMap(
                 mapController: mapController,
                 options: MapOptions(
                   center: LatLng(51.5, -0.09),
@@ -84,13 +128,12 @@ class ReportPageState extends State<ReportPage> {
                 ),
                 layers: [
                   TileLayerOptions(
-                      urlTemplate:
-                      "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+                      urlTemplate: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
                       subdomains: ['a', 'b', 'c']),
                 ],
               ),
             ),
-            new Text("snow: $snowCounter, ice: $iceCounter, slush: $slushCounter")
+            Text("snow: $snowCounter, ice: $iceCounter, slush: $slushCounter, lastCondition: $lastCondition, lastSeverity: $lastSeverity")
           ],
         ),
       ),
