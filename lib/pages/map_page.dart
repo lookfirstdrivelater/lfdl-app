@@ -23,22 +23,6 @@ class MapPageState extends State<MapPage> {
 
   @override
   void initState() {
-    final reportEvent = ReportEvent(
-        startTime: DateTime.utc(2019),
-        endTime: DateTime.utc(2000),
-        points: [
-          LatLng(90, 180),
-          LatLng(-90, -180),
-          LatLng(0.123456789, 9.876543210),
-        ],
-        type: EventType.snow,
-        severity: Severity.low
-    );
-
-    final createdReportEvent = Http.uploadRoadEvent(reportEvent).catchError((err) {
-      print(err);
-    });
-
     super.initState();
     centerMapOnLocation();
   }

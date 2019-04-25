@@ -60,7 +60,7 @@ void main() {
     final roadEvent = RoadEvent(
         id: 1,
         startTime: DateTime.utc(2019),
-        endTime: DateTime.utc(2020),
+        endTime: DateTime.utc(2019).add(severityDuration(Severity.low)),
         points: points,
         type: EventType.snow,
         severity: Severity.low);
@@ -82,7 +82,6 @@ void main() {
 
     final reportEvent = ReportEvent(
         startTime: DateTime.utc(2019),
-        endTime: DateTime.utc(2000),
         points: points,
         type: EventType.snow,
         severity: Severity.low);

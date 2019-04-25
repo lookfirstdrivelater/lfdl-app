@@ -73,8 +73,7 @@ class ReportEvent {
   EventType type;
   Severity severity;
 
-  ReportEvent({this.points, this.type, this.severity}) {
-    startTime = DateTime.now();
+  ReportEvent({this.startTime, this.points, this.type, this.severity}) {
     endTime = startTime.add(severityDuration(severity));
   }
 
