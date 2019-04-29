@@ -16,28 +16,28 @@ class RoadEvent {
   final EventType type;
   final Severity severity;
 
-  RoadEvent({this.id,
-    this.startTime,
-    this.endTime,
-    this.points,
-    this.type,
-    this.severity});
+  RoadEvent(
+      {this.id,
+      this.startTime,
+      this.endTime,
+      this.points,
+      this.type,
+      this.severity});
 
-  factory RoadEvent.fromJson(String json) {
-    final jsonMap = jsonDecode(json);
-    assert(jsonMap['Id'] is int);
-    assert(jsonMap['StartTime'] is String);
-    assert(jsonMap['EndTime'] is String);
-    assert(jsonMap['Points'] is String);
-    assert(jsonMap['Type'] is String);
-    assert(jsonMap['Severity'] is String);
+  factory RoadEvent.fromJson(Map<String, dynamic> json) {
+    assert(json['ID'] is int);
+    assert(json['StartTime'] is String);
+    assert(json['EndTime'] is String);
+    assert(json['Points'] is String);
+    assert(json['EventType'] is String);
+    assert(json['Severity'] is String);
     return RoadEvent(
-        id: jsonMap['Id'],
-        startTime: DateTime.parse(jsonMap['StartTime']),
-        endTime: DateTime.parse(jsonMap['EndTime']),
-        points: stringToPoints(jsonMap['Points']),
-        type: stringToEventType(jsonMap['Type']),
-        severity: stringToSeverity(jsonMap['Severity']));
+        id: json['ID'],
+        startTime: parseDateString((json['StartTime'] as String)),
+        endTime: parseDateString((json['EndTime'] as String)),
+        points: stringToPoints(json['Points']),
+        type: stringToEventType(json['EventType']),
+        severity: stringToSeverity(json['Severity']));
   }
 
   Duration duration() => endTime.difference(startTime);
@@ -53,17 +53,16 @@ class RoadEvent {
           type == other.type &&
           severity == other.severity &&
           listEquals(points, other.points) ||
-          other is ReportEvent &&
-              startTime == other.startTime &&
-              endTime == other.endTime &&
-              type == other.type &&
-              severity == other.severity &&
-              listEquals(points, other.points);
+      other is ReportEvent &&
+          startTime == other.startTime &&
+          endTime == other.endTime &&
+          type == other.type &&
+          severity == other.severity &&
+          listEquals(points, other.points);
 
   @override
   String toString() =>
-      'StartTime: $startTime, EndTime: $endTime, Points: ${pointsToString(
-          points)}, Type: $type, Severity: $severity';
+      'StartTime: $startTime, EndTime: $endTime, Points: ${pointsToString(points)}, Type: $type, Severity: $severity';
 }
 
 class ReportEvent {
@@ -81,14 +80,19 @@ class ReportEvent {
       points
           .map((latLng) => latLng.longitude)
           .reduce((acc, long) => acc + long) /
-          points.length;
+      points.length;
 
   double centerY() =>
       points.map((latLng) => latLng.latitude).reduce((acc, lat) => acc + lat) /
-          points.length;
+      points.length;
 
   Polyline toPolyline() =>
       Polyline(points: points, color: eventColors[type], strokeWidth: 2.0);
+
+  @override
+  String toString() =>
+      'StartTime: $startTime, EndTime: $endTime, Points: ${pointsToString(points)}, Type: $type, Severity: $severity';
+
 }
 
 const eventColors = <EventType, Color>{
@@ -108,10 +112,10 @@ enum EventType { snow, ice, blackIce, slush }
 final eventTypeStrings = EventType.values.map(_enumToString).toList();
 
 final _eventTypeStringMap =
-Map.fromIterables(EventType.values, eventTypeStrings);
+    Map.fromIterables(EventType.values, eventTypeStrings);
 
 final _stringEventTypeMap =
-Map.fromIterables(eventTypeStrings, EventType.values);
+    Map.fromIterables(eventTypeStrings, EventType.values);
 
 String eventTypeToString(EventType eventType) => _eventTypeStringMap[eventType];
 

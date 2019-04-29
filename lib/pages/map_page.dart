@@ -5,7 +5,7 @@ import 'package:lfdl_app/events.dart';
 import 'package:flutter/material.dart';
 import '../drawer.dart';
 import 'package:latlong/latlong.dart';
-import 'package:lfdl_app/http.dart';
+import 'package:lfdl_app/server.dart';
 
 //Map display page
 class MapPage extends StatefulWidget {
