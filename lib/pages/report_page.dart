@@ -18,16 +18,12 @@ class ReportPage extends StatefulWidget {
 
 class ReportPageState extends State<ReportPage> {
 
-  int snowCounter = 0;
-  int iceCounter = 0;
-  int slushCounter = 0;
-  String currentCondition = null;
-  String lastCondition = null;
-  String currentSeverity = null;
-  String lastSeverity = null;
+  String currentCondition;
+  String lastCondition;
+  String currentSeverity;
+  String lastSeverity;
 
   final mapController = MapController();
-  FlutterMap _map;
   GPS gps = GPS();
 
   void center() async {
@@ -41,33 +37,39 @@ class ReportPageState extends State<ReportPage> {
       appBar: AppBar(
         title: Text("Report"),
         actions: <Widget>[
-          IconButton(
-            icon: Icon(Icons.looks_one),
-            tooltip: 'Report snow',
+          FlatButton(
             onPressed: (){
               setState(() {
-                snowCounter++;
+                currentCondition = null;
+                lastCondition = null;
+                currentSeverity = null;
+                lastSeverity = null;
               });
             },
+            padding: EdgeInsets.all(8.0),
+            color: Colors.white,
+            child: Row(
+              children: <Widget>[
+                Icon(Icons.add),
+                Text('New event')
+              ],
+            ),
           ),
-          IconButton(
-            icon: Icon(Icons.looks_two),
-            tooltip: 'Report ice',
+          FlatButton(
             onPressed: (){
               setState(() {
-                iceCounter++;
+                //TODO: Add submitting functionality
               });
             },
+            padding: EdgeInsets.all(8.0),
+            color: Colors.white,
+            child: Row(
+              children: <Widget>[
+                Icon(Icons.check),
+                Text('Submit event')
+              ],
+            ),
           ),
-          IconButton(
-            icon: Icon(Icons.looks_3),
-            tooltip: 'Report slush',
-            onPressed: (){
-              setState(() {
-                slushCounter++;
-              });
-            },
-          )
         ],
       ),
       drawer: buildDrawer(context, ReportPage.route),
@@ -94,7 +96,7 @@ class ReportPageState extends State<ReportPage> {
                 })
                     .toList(),
                 isExpanded: true,
-                hint: Text("Select event type here")
+                hint: Text("Select an event type")
               ),
             ),
             Padding(
@@ -116,9 +118,10 @@ class ReportPageState extends State<ReportPage> {
                 })
                     .toList(),
                 isExpanded: true,
-                hint: Text("Select severity type here")
+                hint: Text("Select a severity")
               ),
             ),
+            Text('Select a reporting area below', textAlign: TextAlign.left),
             Flexible(
               child: FlutterMap(
                 mapController: mapController,
@@ -133,7 +136,7 @@ class ReportPageState extends State<ReportPage> {
                 ],
               ),
             ),
-            Text("snow: $snowCounter, ice: $iceCounter, slush: $slushCounter, lastCondition: $lastCondition, lastSeverity: $lastSeverity")
+            Text("lastCondition: $lastCondition, lastSeverity: $lastSeverity")
           ],
         ),
       ),
