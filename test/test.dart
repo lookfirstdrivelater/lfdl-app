@@ -11,7 +11,8 @@ import 'package:lfdl_app/events.dart';
 import 'package:lfdl_app/main.dart';
 import 'package:latlong/latlong.dart';
 import 'package:lfdl_app/utils.dart';
-import 'package:lfdl_app/http.dart';
+import 'package:lfdl_app/server.dart';
+import 'dart:convert';
 
 void main() {
   group('Road Event', () {
@@ -57,26 +58,25 @@ void main() {
 
     final points = [latLng1, latLng2, latLng3];
 
-    final roadEvent = RoadEvent(
-        id: 1,
-        startTime: DateTime.utc(2019),
-        endTime: DateTime.utc(2019).add(severityDuration(Severity.low)),
-        points: points,
-        type: EventType.snow,
-        severity: Severity.low);
+    test('RoadEvent JSON Deserialization', () {
+      final roadEvent = RoadEvent(
+          id: 1,
+          startTime: DateTime.utc(2019),
+          endTime: DateTime.utc(2020),
+          points: points,
+          type: EventType.snow,
+          severity: Severity.low);
 
-    final roadEventJson = '''
+      final roadEventJson = jsonDecode('''
           {
-              "Id": ${roadEvent.id},
+              "ID": ${roadEvent.id},
               "StartTime": "${roadEvent.startTime}",
               "EndTime": "${roadEvent.endTime}",
               "Points": "${pointsToString(roadEvent.points)}",
-              "Type": "${eventTypeToString(roadEvent.type)}",
+              "EventType": "${eventTypeToString(roadEvent.type)}",
               "Severity": "${severityToString(roadEvent.severity)}"
           }
-    ''';
-
-    test('RoadEvent JSON Deserialization', () {
+    ''');
       expect(RoadEvent.fromJson(roadEventJson), roadEvent);
     });
 
@@ -87,8 +87,8 @@ void main() {
         severity: Severity.low);
 
     test('Upload Report Event', () async {
-      final createdReportEvent = await Http.uploadRoadEvent(reportEvent);
-      expect(createdReportEvent, reportEvent);
+      final roadEvent = await Server.uploadRoadEvent(reportEvent);
+      expect(roadEvent, reportEvent);
     });
 
 //    final roadEventUrl =

@@ -1,4 +1,5 @@
 import 'package:latlong/latlong.dart';
+import 'dart:math';
 
 final latLngMatcher = RegExp('\\(($numberPattern), ?($numberPattern)\\)');
 
@@ -22,4 +23,13 @@ bool listEquals(List<dynamic> list1, List<dynamic> list2) {
     if (list1[i] != list2[i]) return false;
   }
   return true;
+}
+
+final millisMatcher = RegExp(r'\.\d+[zZ]?');
+
+DateTime parseDateString(String date) {
+  final millisMatch = millisMatcher.firstMatch(date);
+  String millis = millisMatch[0];
+  millis = millis.substring(0, min(7, millis.length));
+  return DateTime.parse(date.substring(0, millisMatch.start) + millis + date.substring(millisMatch.end));
 }
