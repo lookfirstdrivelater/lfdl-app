@@ -1,5 +1,6 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter/material.dart';
+import 'package:lfdl_app/events.dart';
 import '../drawer.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:lfdl_app/gps.dart';
@@ -24,11 +25,62 @@ class ReportPageState extends State<ReportPage> {
   String lastSeverity;
 
   final mapController = MapController();
-  GPS gps = GPS();
+  final gps = GPS();
+  final mapPolylines = List<Polyline>();
+  final circles = List<CircleMarker>();
 
   void center() async {
     final position = await gps.location();
     mapController.move(position, 10.0);
+  }
+
+  List<CircleMarker> emptyCircleMarkerList = List(0);
+
+  List<CircleMarker> getCircleMarkers() {
+    return reportEvent?.points
+        ?.map((point) =>
+        CircleMarker(point: point, radius: 10.0))
+        ?.toList() ?? emptyCircleMarkerList;
+  }
+
+  void addRoadEvents(List<RoadEvent> events) {
+    setState(() {
+      for (RoadEvent event in events) {
+        mapPolylines.add(Polyline(
+          points: event.points,
+          color: eventColors[event.type],
+          strokeWidth: 2.0,
+        ));
+      }
+    });
+  }
+
+  ReportEvent reportEvent;
+
+  void onTap(LatLng latLgn) {
+    if (reportEvent != null) {
+      setState(() {
+        reportEvent.points.add(latLgn);
+      });
+    }
+  }
+
+  void onStartRoadPressed() {
+    if (reportEvent == null) {
+      reportEvent = ReportEvent(
+        points: List(),
+        type: EventType.snow,
+      );
+      mapPolylines.add(reportEvent.toPolyline());
+    }
+  }
+
+  void onEndRoadPressed() {
+    if (reportEvent != null) {
+      setState(() {
+        reportEvent = null;
+      });
+    }
   }
 
   @override
@@ -121,18 +173,34 @@ class ReportPageState extends State<ReportPage> {
                 hint: Text("Select a severity")
               ),
             ),
+            Row(
+              children: <Widget> [
+                FlatButton(
+                    onPressed: onStartRoadPressed,
+                    color: Colors.white,
+                    child: Text("Start Road Event")),
+                FlatButton(
+                    onPressed: onEndRoadPressed,
+                    color: Colors.white,
+                    child: Text("End Road Event")),
+              ]
+            ),
             Text('Select a reporting area below', textAlign: TextAlign.left),
             Flexible(
               child: FlutterMap(
                 mapController: mapController,
-                options: MapOptions(
-                  center: LatLng(51.5, -0.09),
-                  zoom: 5.0,
-                ),
+                options: MapOptions(onTap: onTap),
                 layers: [
                   TileLayerOptions(
-                      urlTemplate: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+                      urlTemplate:
+                      "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
                       subdomains: ['a', 'b', 'c']),
+                  PolylineLayerOptions(
+                    polylines:
+                    mapPolylines,
+                  ),
+                  CircleLayerOptions(
+                      circles: getCircleMarkers())
                 ],
               ),
             ),
