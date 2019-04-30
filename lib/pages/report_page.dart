@@ -29,9 +29,10 @@ class ReportPageState extends State<ReportPage> {
   final mapPolylines = List<Polyline>();
   final circles = List<CircleMarker>();
 
-  void center() async {
-    final position = await gps.location();
-    mapController.move(position, 10.0);
+  @override
+  void initState() {
+    super.initState();
+    centerMapOnLocation();
   }
 
   List<CircleMarker> emptyCircleMarkerList = List(0);
@@ -41,6 +42,11 @@ class ReportPageState extends State<ReportPage> {
         ?.map((point) =>
         CircleMarker(point: point, radius: 10.0))
         ?.toList() ?? emptyCircleMarkerList;
+  }
+
+  void centerMapOnLocation() async {
+    final position = await gps.location();
+    mapController.move(position, 15.0);
   }
 
   void addRoadEvents(List<RoadEvent> events) {
@@ -90,37 +96,16 @@ class ReportPageState extends State<ReportPage> {
         title: Text("Report"),
         actions: <Widget>[
           FlatButton(
-            onPressed: (){
-              setState(() {
-                currentCondition = null;
-                lastCondition = null;
-                currentSeverity = null;
-                lastSeverity = null;
-              });
-            },
-            padding: EdgeInsets.all(8.0),
-            color: Colors.white,
-            child: Row(
+            onPressed: centerMapOnLocation,
+            child: Row (
               children: <Widget>[
-                Icon(Icons.add),
-                Text('New event')
-              ],
-            ),
-          ),
-          FlatButton(
-            onPressed: (){
-              setState(() {
-                //TODO: Add submitting functionality
-              });
-            },
-            padding: EdgeInsets.all(8.0),
-            color: Colors.white,
-            child: Row(
-              children: <Widget>[
-                Icon(Icons.check),
-                Text('Submit event')
-              ],
-            ),
+                Icon(Icons.gps_fixed, color: Colors.white),
+                Text(
+                  "Center Map",
+                  style: TextStyle(color: Colors.white),
+                )
+              ]
+            )
           ),
         ],
       ),
@@ -173,18 +158,6 @@ class ReportPageState extends State<ReportPage> {
                 hint: Text("Select a severity")
               ),
             ),
-            Row(
-              children: <Widget> [
-                FlatButton(
-                    onPressed: onStartRoadPressed,
-                    color: Colors.white,
-                    child: Text("Start Road Event")),
-                FlatButton(
-                    onPressed: onEndRoadPressed,
-                    color: Colors.white,
-                    child: Text("End Road Event")),
-              ]
-            ),
             Text('Select a reporting area below', textAlign: TextAlign.left),
             Flexible(
               child: FlutterMap(
@@ -203,6 +176,56 @@ class ReportPageState extends State<ReportPage> {
                       circles: getCircleMarkers())
                 ],
               ),
+            ),
+            Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: <Widget> [
+                  FlatButton(
+                    color: Colors.blue,
+                    onPressed: (){
+                      setState(() {
+                        currentCondition = null;
+                        lastCondition = null;
+                        currentSeverity = null;
+                        lastSeverity = null;
+                      });
+                    },
+                    padding: EdgeInsets.all(8.0),
+                    child: Row(
+                      children: <Widget>[
+                        Icon(
+                          Icons.undo,
+                          color: Colors.white,
+                        ),
+                        Text(
+                          'Undo',
+                          style: TextStyle(color: Colors.white),
+                        )
+                      ],
+                    ),
+                  ),
+                  FlatButton(
+                    color: Colors.blue,
+                    onPressed: (){
+                      setState(() {
+                        //TODO: Add submitting functionality
+                      });
+                    },
+                    padding: EdgeInsets.all(8.0),
+                    child: Row(
+                      children: <Widget>[
+                        Icon(
+                          Icons.check,
+                          color: Colors.white,
+                        ),
+                        Text(
+                          'Submit event',
+                          style: TextStyle(color: Colors.white),
+                        )
+                      ],
+                    ),
+                  ),
+                ]
             ),
             Text("lastCondition: $lastCondition, lastSeverity: $lastSeverity")
           ],
