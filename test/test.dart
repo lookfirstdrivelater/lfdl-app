@@ -95,23 +95,7 @@ void main() {
       expect(queriedRoadEvents1.contains(uploadedRoadEvent), isTrue);
       Server.deleteRoadEvent(uploadedRoadEvent.id);
       final queriedRoadEvents2 = await Server.queryRoadEvents(await GPS.location(), reportEvent.centerY() + 5, reportEvent.centerX() + 5, reportEvent.centerY() - 5, reportEvent.centerX() - 5);
-      expect(queriedRoadEvents1.contains(uploadedRoadEvent), isFalse);
-    });
-
-
-
-//    final roadEventUrl =
-//        '${Http.serverUrl}/createevent?'
-//        'startTime=${roadEvent.startTime}&'
-//        'endTime=${roadEvent.endTime}&'
-//        'points=${pointsToString(roadEvent.points)}&'
-//        'type=${eventTypeToString(roadEvent.type)}&'
-//        'severity=${severityToString(roadEvent.severity)}&'
-//        'centerX=${roadEvent.}&'
-//        '';
-
-    test('Post Request Url', () {
-//      expect()
+      expect(queriedRoadEvents2.contains(uploadedRoadEvent), isFalse);
     });
   });
 }

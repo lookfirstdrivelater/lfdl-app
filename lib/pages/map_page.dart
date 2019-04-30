@@ -74,12 +74,17 @@ class MapPageState extends State<MapPage> {
   void onUndoPressed() {
     if (reportEvent != null) {
       setState(() {
-//        circles.removeLast();
         reportEvent.points.removeLast();
       });
-    } else if(mapPolylines.length != 0){
-      mapPolylines.removeLast();
+    } else if (mapPolylines.length != 0) {
+      setState(() {
+        mapPolylines.removeLast();
+      });
     }
+  }
+
+  void onPositionChanged(MapPosition position, bool hasGesture) {
+
   }
 
   @override
@@ -113,22 +118,21 @@ class MapPageState extends State<MapPage> {
             Flexible(
               child: FlutterMap(
                 mapController: mapController,
-                options: MapOptions(onTap: onTap),
+                options: MapOptions(onTap: onTap, onPositionChanged: onPositionChanged),
                 layers: [
                   TileLayerOptions(
                       urlTemplate:
                           "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
                       subdomains: ['a', 'b', 'c']),
                   PolylineLayerOptions(
-                    polylines:
-                        mapPolylines,
+                    polylines: mapPolylines,
                   ),
                   CircleLayerOptions(
                       circles: reportEvent?.points
-                          ?.map((point) =>
-                          CircleMarker(point: point, radius: 10.0))
-                          ?.toList() ?? List()
-                  ),
+                              ?.map((point) =>
+                                  CircleMarker(point: point, radius: 10.0))
+                              ?.toList() ??
+                          List()),
                 ],
               ),
             ),

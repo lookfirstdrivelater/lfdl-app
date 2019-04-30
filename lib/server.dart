@@ -21,7 +21,6 @@ class Server {
       LatLng location, double top, double right, double bottom, double left) async {
     final url =
         "$serverUrl/events/query?"
-        "location=${latLngToString(location)}&"
         "top=$top&"
         "right=$right&"
         "bottom=$bottom&"
@@ -38,11 +37,11 @@ class Server {
 
   static Future<void> deleteRoadEvent(int id) async {
     final url = "$serverUrl/events/delete?id=$id";
-    await sendGetRequest(url);
+    await sendPostRequest(url);
   }
 
-  static Future<String> sendGetRequest(String url) async {
-    HttpClientRequest request = await httpClient.getUrl(Uri.parse(url));
+  static Future<String> sendPostRequest(String url) async {
+    HttpClientRequest request = await httpClient.postUrl(Uri.parse(url));
     HttpClientResponse response = await request.close();
     httpClient.close();
     return await response.transform(utf8.decoder).join();
@@ -57,7 +56,7 @@ class Server {
         "severity=${severityToString(event.severity)}&"
         "centerx=${event.centerX()}&"
         "centery=${event.centerY()}";
-    final reply = await sendGetRequest(url);
+    final reply = await sendPostRequest(url);
     final json = jsonDecode(reply);
 
     assert(json['message'] == null);
