@@ -18,19 +18,34 @@ class Server {
   static const serverUrl = "https://stupidcpu.com/api";
 
   static Future<List<RoadEvent>> queryRoadEvents(
-      LatLng location, double radius) async {
+      LatLng location, double top, double right, double bottom, double left) async {
     final url =
-        "$serverUrl/events/query?location=${latLngToString(location)}&radius=$radius";
+        "$serverUrl/events/query?"
+        "location=${latLngToString(location)}&"
+        "top=$top&"
+        "right=$right&"
+        "bottom=$bottom&"
+        "left=$left";
     HttpClientRequest request = await httpClient.getUrl(Uri.parse(url));
     HttpClientResponse response = await request.close();
     final reply = await response.transform(utf8.decoder).join();
     httpClient.close();
 
-
-
     final json = jsonDecode(reply);
 
     return [RoadEvent.fromJson(json['create'])];
+  }
+
+  static Future<void> deleteRoadEvent(int id) async {
+    final url = "$serverUrl/events/delete?id=$id";
+    await sendGetRequest(url);
+  }
+
+  static Future<String> sendGetRequest(String url) async {
+    HttpClientRequest request = await httpClient.getUrl(Uri.parse(url));
+    HttpClientResponse response = await request.close();
+    httpClient.close();
+    return await response.transform(utf8.decoder).join();
   }
 
   static Future<RoadEvent> uploadRoadEvent(ReportEvent event) async {
@@ -42,10 +57,7 @@ class Server {
         "severity=${severityToString(event.severity)}&"
         "centerx=${event.centerX()}&"
         "centery=${event.centerY()}";
-    HttpClientRequest request = await httpClient.getUrl(Uri.parse(url));
-    HttpClientResponse response = await request.close();
-    final reply = await response.transform(utf8.decoder).join();
-    httpClient.close();
+    final reply = await sendGetRequest(url);
     final json = jsonDecode(reply);
 
     assert(json['message'] == null);

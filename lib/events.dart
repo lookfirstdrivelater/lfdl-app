@@ -48,11 +48,7 @@ class RoadEvent {
   @override
   bool operator ==(dynamic other) =>
       other is RoadEvent &&
-          startTime == other.startTime &&
-          endTime == other.endTime &&
-          type == other.type &&
-          severity == other.severity &&
-          listEquals(points, other.points) ||
+          id == other.id ||
       other is ReportEvent &&
           startTime == other.startTime &&
           endTime == other.endTime &&
@@ -67,14 +63,12 @@ class RoadEvent {
 
 class ReportEvent {
   DateTime startTime;
-  DateTime endTime;
+  DateTime get endTime => startTime.add(severityDuration(severity));
   List<LatLng> points;
   EventType type;
   Severity severity;
 
-  ReportEvent({this.startTime, this.points, this.type, this.severity}) {
-    endTime = startTime.add(severityDuration(severity));
-  }
+  ReportEvent({this.startTime, this.points, this.type, this.severity});
 
   double centerX() =>
       points
@@ -86,13 +80,12 @@ class ReportEvent {
       points.map((latLng) => latLng.latitude).reduce((acc, lat) => acc + lat) /
       points.length;
 
-  Polyline toPolyline() =>
+  Polyline get polyline =>
       Polyline(points: points, color: eventColors[type], strokeWidth: 2.0);
 
   @override
   String toString() =>
       'StartTime: $startTime, EndTime: $endTime, Points: ${pointsToString(points)}, Type: $type, Severity: $severity';
-
 }
 
 const eventColors = <EventType, Color>{

@@ -24,10 +24,9 @@ class ReportPageState extends State<ReportPage> {
   String lastSeverity;
 
   final mapController = MapController();
-  GPS gps = GPS();
 
   void center() async {
-    final position = await gps.location();
+    final position = await GPS.location();
     mapController.move(position, 10.0);
   }
 

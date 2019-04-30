@@ -17,7 +17,6 @@ class MapPage extends StatefulWidget {
 
 class MapPageState extends State<MapPage> {
   final mapController = MapController();
-  final gps = GPS();
   final mapPolylines = List<Polyline>();
   final circles = List<CircleMarker>();
 
@@ -27,17 +26,8 @@ class MapPageState extends State<MapPage> {
     centerMapOnLocation();
   }
 
-  List<CircleMarker> emptyCircleMarkerList = List(0);
-
-  List<CircleMarker> getCircleMarkers() {
-    return reportEvent?.points
-        ?.map((point) =>
-        CircleMarker(point: point, radius: 10.0))
-        ?.toList() ?? emptyCircleMarkerList;
-  }
-
   void centerMapOnLocation() async {
-    final position = await gps.location();
+    final position = await GPS.location();
     mapController.move(position, 15.0);
   }
 
@@ -69,7 +59,7 @@ class MapPageState extends State<MapPage> {
         points: List(),
         type: EventType.snow,
       );
-      mapPolylines.add(reportEvent.toPolyline());
+      mapPolylines.add(reportEvent.polyline);
     }
   }
 
@@ -134,7 +124,11 @@ class MapPageState extends State<MapPage> {
                         mapPolylines,
                   ),
                   CircleLayerOptions(
-                      circles: getCircleMarkers())
+                      circles: reportEvent?.points
+                          ?.map((point) =>
+                          CircleMarker(point: point, radius: 10.0))
+                          ?.toList() ?? List()
+                  ),
                 ],
               ),
             ),

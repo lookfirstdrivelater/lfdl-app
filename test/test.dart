@@ -13,6 +13,8 @@ import 'package:latlong/latlong.dart';
 import 'package:lfdl_app/utils.dart';
 import 'package:lfdl_app/server.dart';
 import 'dart:convert';
+import 'package:lfdl_app/gps.dart';
+
 
 void main() {
   group('Road Event', () {
@@ -24,13 +26,13 @@ void main() {
     final latLng3 = LatLng(0.123456789, 9.876543210);
 
     test('LatLng Matching', () {
-      expect(latLngMatcher.hasMatch(latLngStr1), true);
+      expect(latLngMatcher.hasMatch(latLngStr1), isTrue);
       expect(latLngMatcher.firstMatch(latLngStr1).group(0), latLngStr1);
 
-      expect(latLngMatcher.hasMatch(latLngStr2), true);
+      expect(latLngMatcher.hasMatch(latLngStr2), isTrue);
       expect(latLngMatcher.firstMatch(latLngStr2).group(0), latLngStr2);
 
-      expect(latLngMatcher.hasMatch(latLngStr3), true);
+      expect(latLngMatcher.hasMatch(latLngStr3), isTrue);
       expect(latLngMatcher.firstMatch(latLngStr3).group(0), latLngStr3);
     });
 
@@ -86,10 +88,17 @@ void main() {
         type: EventType.snow,
         severity: Severity.low);
 
-    test('Upload Report Event', () async {
-      final roadEvent = await Server.uploadRoadEvent(reportEvent);
-      expect(roadEvent, reportEvent);
+    test('Uploading Report Events', () async {
+      final uploadedRoadEvent = await Server.uploadRoadEvent(reportEvent);
+      expect(uploadedRoadEvent, reportEvent);
+      final queriedRoadEvents1 = await Server.queryRoadEvents(await GPS.location(), reportEvent.centerY() + 5, reportEvent.centerX() + 5, reportEvent.centerY() - 5, reportEvent.centerX() - 5);
+      expect(queriedRoadEvents1.contains(uploadedRoadEvent), isTrue);
+      Server.deleteRoadEvent(uploadedRoadEvent.id);
+      final queriedRoadEvents2 = await Server.queryRoadEvents(await GPS.location(), reportEvent.centerY() + 5, reportEvent.centerX() + 5, reportEvent.centerY() - 5, reportEvent.centerX() - 5);
+      expect(queriedRoadEvents1.contains(uploadedRoadEvent), isFalse);
     });
+
+
 
 //    final roadEventUrl =
 //        '${Http.serverUrl}/createevent?'
