@@ -15,24 +15,28 @@ import 'dart:developer';
 class Server {
   static HttpClient httpClient = new HttpClient();
 
-  static const serverUrl = "https://stupidcpu.com/api";
+//  static const serverUrl = "https://stupidcpu.com/api";
+
+  static const serverUrl = "http://172.31.19.46:8080";
 
   static Future<List<RoadEvent>> queryRoadEvents(
       LatLng location, double top, double right, double bottom, double left) async {
     final url =
         "$serverUrl/events/query?"
-        "top=$top&"
-        "right=$right&"
-        "bottom=$bottom&"
-        "left=$left";
-    HttpClientRequest request = await httpClient.getUrl(Uri.parse(url));
-    HttpClientResponse response = await request.close();
-    final reply = await response.transform(utf8.decoder).join();
-    httpClient.close();
-
+        "toplatitude=$top&"
+        "rightlongitude=$right&"
+        "bottomlatitude=$bottom&"
+        "leftlongitude=$left";
+    final reply = await sendPostRequest(url);
     final json = jsonDecode(reply);
 
-    return [RoadEvent.fromJson(json['create'])];
+    assert(json['message'] == null);
+
+    assert(json['events'] != null);
+
+
+
+    return (json['events'] as List).map((e) => RoadEvent.fromJson(json[e]));
   }
 
   static Future<void> deleteRoadEvent(int id) async {
@@ -43,7 +47,7 @@ class Server {
   static Future<String> sendPostRequest(String url) async {
     HttpClientRequest request = await httpClient.postUrl(Uri.parse(url));
     HttpClientResponse response = await request.close();
-    httpClient.close();
+//    httpClient.close();
     return await response.transform(utf8.decoder).join();
   }
 

@@ -18,12 +18,12 @@ import 'package:lfdl_app/gps.dart';
 
 void main() {
   group('Road Event', () {
-    final latLngStr1 = '(90.0, 180.0)';
-    final latLngStr2 = '(-90, -180)';
-    final latLngStr3 = '(0.123456789, 9.876543210)';
-    final latLng1 = LatLng(90, 180);
-    final latLng2 = LatLng(-90, -180);
-    final latLng3 = LatLng(0.123456789, 9.876543210);
+    final latLngStr1 = '(0.0, 0.0)';
+    final latLngStr2 = '(45.0, 90.0)';
+    final latLngStr3 = '(90.0, 180.0)';
+    final latLng1 = LatLng(0.0, 0.0);
+    final latLng2 = LatLng(45.0, 90.0);
+    final latLng3 = LatLng(90.0, 180.0);
 
     test('LatLng Matching', () {
       expect(latLngMatcher.hasMatch(latLngStr1), isTrue);
@@ -90,7 +90,8 @@ void main() {
 
     test('Uploading Report Events', () async {
       final uploadedRoadEvent = await Server.uploadRoadEvent(reportEvent);
-      expect(uploadedRoadEvent, reportEvent);
+      final equal = uploadedRoadEvent == reportEvent;
+      expect(equal, isTrue);
       final queriedRoadEvents1 = await Server.queryRoadEvents(await GPS.location(), reportEvent.centerY() + 5, reportEvent.centerX() + 5, reportEvent.centerY() - 5, reportEvent.centerX() - 5);
       expect(queriedRoadEvents1.contains(uploadedRoadEvent), isTrue);
       Server.deleteRoadEvent(uploadedRoadEvent.id);

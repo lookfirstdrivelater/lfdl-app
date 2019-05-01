@@ -31,13 +31,19 @@ class RoadEvent {
     assert(json['Points'] is String);
     assert(json['EventType'] is String);
     assert(json['Severity'] is String);
+    final id = json['ID'];
+    final startTime = parseDateString(json['StartTime']);
+    final endTime = parseDateString(json['EndTime']);
+    final points = stringToPoints(json['Points']);
+    final type = stringToEventType(json['EventType']);
+    final severity = stringToSeverity(json['Severity']);
     return RoadEvent(
-        id: json['ID'],
-        startTime: parseDateString((json['StartTime'] as String)),
-        endTime: parseDateString((json['EndTime'] as String)),
-        points: stringToPoints(json['Points']),
-        type: stringToEventType(json['EventType']),
-        severity: stringToSeverity(json['Severity']));
+        id: id,
+        startTime: startTime,
+        endTime: endTime,
+        points: points,
+        type: type,
+        severity: severity);
   }
 
   Duration duration() => endTime.difference(startTime);
@@ -47,8 +53,7 @@ class RoadEvent {
 
   @override
   bool operator ==(dynamic other) =>
-      other is RoadEvent &&
-          id == other.id ||
+      other is RoadEvent && id == other.id ||
       other is ReportEvent &&
           startTime == other.startTime &&
           endTime == other.endTime &&
@@ -63,6 +68,7 @@ class RoadEvent {
 
 class ReportEvent {
   DateTime startTime;
+
   DateTime get endTime => startTime.add(severityDuration(severity));
   List<LatLng> points;
   EventType type;
