@@ -21,9 +21,9 @@ void main() {
     final latLng1 = LatLng(0.0, 0.0);
     final latLng2 = LatLng(45.0, 90.0);
     final latLng3 = LatLng(90.0, 180.0);
-    final latLngStr1 = '(0.0, 0.0)';
-    final latLngStr2 = '(45.0, 90.0)';
-    final latLngStr3 = '(90.0, 180.0)';
+    final latLngStr1 = latLngToString(latLng1);
+    final latLngStr2 = latLngToString(latLng2);
+    final latLngStr3 = latLngToString(latLng3);
 
     test('LatLng Matching', () {
       expect(latLngMatcher.hasMatch(latLngStr1), isTrue);
@@ -96,6 +96,10 @@ void main() {
       print(deleteReply);
       final queriedRoadEvents2 = await Server.queryRoadEvents(await GPS.location(), reportEvent.centerY() + 5, reportEvent.centerX() + 5, reportEvent.centerY() - 5, reportEvent.centerX() - 5);
       expect(queriedRoadEvents2.contains(uploadedRoadEvent), isFalse);
+    });
+
+    test('Camel case to space case', () {
+      expect(camelCaseToSpaceCase('camelCase'), 'Camel Case');
     });
   });
 }
