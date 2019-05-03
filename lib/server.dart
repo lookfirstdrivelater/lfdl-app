@@ -34,14 +34,12 @@ class Server {
 
     assert(json['events'] != null);
 
-
-
-    return (json['events'] as List).map((e) => RoadEvent.fromJson(json[e]));
+    return (json['events'] as List).map((e) => RoadEvent.fromJson(e) as RoadEvent).toList();
   }
 
-  static Future<void> deleteRoadEvent(int id) async {
+  static Future<String> deleteRoadEvent(int id) async {
     final url = "$serverUrl/events/delete?id=$id";
-    await sendPostRequest(url);
+    return sendPostRequest(url);
   }
 
   static Future<String> sendPostRequest(String url) async {
@@ -64,6 +62,10 @@ class Server {
     final json = jsonDecode(reply);
 
     assert(json['message'] == null);
+
+    if(json['message'] != null) {
+      print("Upload Failed: json['message']");
+    }
 
     assert(json['create'] != null);
 

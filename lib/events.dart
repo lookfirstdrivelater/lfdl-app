@@ -24,7 +24,7 @@ class RoadEvent {
       this.type,
       this.severity});
 
-  factory RoadEvent.fromJson(Map<String, dynamic> json) {
+  factory RoadEvent.fromJson(Map<dynamic, dynamic> json) {
     assert(json['ID'] is int);
     assert(json['StartTime'] is String);
     assert(json['EndTime'] is String);
@@ -68,13 +68,16 @@ class RoadEvent {
 
 class ReportEvent {
   DateTime startTime;
-
   DateTime get endTime => startTime.add(severityDuration(severity));
   List<LatLng> points;
   EventType type;
   Severity severity;
 
-  ReportEvent({this.startTime, this.points, this.type, this.severity});
+  ReportEvent() {
+    points = List();
+    type = EventType.snow;
+    severity = Severity.medium;
+  }
 
   double centerX() =>
       points
@@ -108,13 +111,13 @@ String _enumToString(dynamic enumeration) {
 
 enum EventType { snow, ice, blackIce, slush }
 
-final eventTypeStrings = EventType.values.map(_enumToString).toList();
+final _eventTypeStrings = EventType.values.map(_enumToString).toList();
 
 final _eventTypeStringMap =
-    Map.fromIterables(EventType.values, eventTypeStrings);
+    Map.fromIterables(EventType.values, _eventTypeStrings);
 
 final _stringEventTypeMap =
-    Map.fromIterables(eventTypeStrings, EventType.values);
+    Map.fromIterables(_eventTypeStrings, EventType.values);
 
 String eventTypeToString(EventType eventType) => _eventTypeStringMap[eventType];
 
@@ -122,11 +125,11 @@ EventType stringToEventType(String string) => _stringEventTypeMap[string];
 
 enum Severity { low, medium, high }
 
-final severityStrings = Severity.values.map(_enumToString).toList();
+final _severityStrings = Severity.values.map(_enumToString).toList();
 
-final _stringSeverityMap = Map.fromIterables(severityStrings, Severity.values);
+final _stringSeverityMap = Map.fromIterables(_severityStrings, Severity.values);
 
-final _severityStringMap = Map.fromIterables(Severity.values, severityStrings);
+final _severityStringMap = Map.fromIterables(Severity.values, _severityStrings);
 
 String severityToString(Severity severity) => _severityStringMap[severity];
 
