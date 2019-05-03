@@ -18,12 +18,12 @@ import 'package:lfdl_app/gps.dart';
 
 void main() {
   group('Road Event', () {
-    final latLngStr1 = '(0.0, 0.0)';
-    final latLngStr2 = '(45.0, 90.0)';
-    final latLngStr3 = '(90.0, 180.0)';
     final latLng1 = LatLng(0.0, 0.0);
     final latLng2 = LatLng(45.0, 90.0);
     final latLng3 = LatLng(90.0, 180.0);
+    final latLngStr1 = '(0.0, 0.0)';
+    final latLngStr2 = '(45.0, 90.0)';
+    final latLngStr3 = '(90.0, 180.0)';
 
     test('LatLng Matching', () {
       expect(latLngMatcher.hasMatch(latLngStr1), isTrue);
@@ -45,16 +45,14 @@ void main() {
     test('EventType to and from strings', () {
       final eventTypes = EventType.values;
       for (int i = 0; i < eventTypes.length; i++) {
-        expect(stringToEventType(eventTypeStrings[i]), eventTypes[i]);
-        expect(eventTypeToString(eventTypes[i]), eventTypeStrings[i]);
+        expect(stringToEventType(eventTypeToString(eventTypes[i])), eventTypes[i]);
       }
     });
 
     test('Severity to and form strings', () {
       final severities = Severity.values;
       for (int i = 0; i < severities.length; i++) {
-        expect(stringToSeverity(severityStrings[i]), severities[i]);
-        expect(severityToString(severities[i]), severityStrings[i]);
+        expect(stringToSeverity(severityToString(severities[i])), severities[i]);
       }
     });
 
@@ -82,11 +80,11 @@ void main() {
       expect(RoadEvent.fromJson(roadEventJson), roadEvent);
     });
 
-    final reportEvent = ReportEvent(
-        startTime: DateTime.utc(2019),
-        points: points,
-        type: EventType.snow,
-        severity: Severity.low);
+    final reportEvent = ReportEvent()
+        ..startTime = DateTime.utc(2019)
+        ..points = points
+        ..type = EventType.snow
+        ..severity = Severity.low;
 
     test('Uploading Report Events', () async {
       final uploadedRoadEvent = await Server.uploadRoadEvent(reportEvent);
@@ -94,7 +92,8 @@ void main() {
       expect(equal, isTrue);
       final queriedRoadEvents1 = await Server.queryRoadEvents(await GPS.location(), reportEvent.centerY() + 5, reportEvent.centerX() + 5, reportEvent.centerY() - 5, reportEvent.centerX() - 5);
       expect(queriedRoadEvents1.contains(uploadedRoadEvent), isTrue);
-      Server.deleteRoadEvent(uploadedRoadEvent.id);
+      final deleteReply = await Server.deleteRoadEvent(uploadedRoadEvent.id);
+      print(deleteReply);
       final queriedRoadEvents2 = await Server.queryRoadEvents(await GPS.location(), reportEvent.centerY() + 5, reportEvent.centerX() + 5, reportEvent.centerY() - 5, reportEvent.centerX() - 5);
       expect(queriedRoadEvents2.contains(uploadedRoadEvent), isFalse);
     });

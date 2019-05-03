@@ -53,24 +53,6 @@ class MapPageState extends State<MapPage> {
     }
   }
 
-  void onStartRoadPressed() {
-    if (reportEvent == null) {
-      reportEvent = ReportEvent(
-        points: List(),
-        type: EventType.snow,
-      );
-      mapPolylines.add(reportEvent.polyline);
-    }
-  }
-
-  void onEndRoadPressed() {
-    if (reportEvent != null) {
-      setState(() {
-        reportEvent = null;
-      });
-    }
-  }
-
   void onUndoPressed() {
     if (reportEvent != null) {
       setState(() {
@@ -83,9 +65,7 @@ class MapPageState extends State<MapPage> {
     }
   }
 
-  void onPositionChanged(MapPosition position, bool hasGesture) {
-
-  }
+  void onPositionChanged(MapPosition position, bool hasGesture) {}
 
   @override
   Widget build(BuildContext context) {
@@ -98,27 +78,17 @@ class MapPageState extends State<MapPage> {
         child: Column(
           children: [
             Padding(
-                padding: EdgeInsets.only(top: 8.0, bottom: 8.0),
-                child: Column(children: [
-                  FlatButton(
-                      onPressed: onStartRoadPressed,
-                      child: Text("Start Road Event")),
-                  FlatButton(
-                      onPressed: onEndRoadPressed,
-                      child: Text("End Road Event")),
-                  FlatButton(
-                    onPressed: onUndoPressed,
-                    child: Text("Undo"),
-                  ),
-                  FlatButton(
-                    onPressed: centerMapOnLocation,
-                    child: Text("Center Around Person"),
-                  ),
-                ])),
+              padding: EdgeInsets.only(top: 8.0, bottom: 8.0),
+              child: FlatButton(
+                onPressed: centerMapOnLocation,
+                child: Text("Center Around Person"),
+              ),
+            ),
             Flexible(
               child: FlutterMap(
                 mapController: mapController,
-                options: MapOptions(onTap: onTap, onPositionChanged: onPositionChanged),
+                options: MapOptions(
+                    onTap: onTap, onPositionChanged: onPositionChanged),
                 layers: [
                   TileLayerOptions(
                       urlTemplate:
@@ -127,12 +97,7 @@ class MapPageState extends State<MapPage> {
                   PolylineLayerOptions(
                     polylines: mapPolylines,
                   ),
-                  CircleLayerOptions(
-                      circles: reportEvent?.points
-                              ?.map((point) =>
-                                  CircleMarker(point: point, radius: 10.0))
-                              ?.toList() ??
-                          List()),
+                  CircleLayerOptions(),
                 ],
               ),
             ),
