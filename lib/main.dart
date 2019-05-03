@@ -9,6 +9,7 @@ import 'dart:io';
 import 'package:lfdl_app/pages/map_page.dart';
 import 'package:lfdl_app/pages/test_page.dart';
 import 'package:lfdl_app/pages/report_page.dart';
+import 'package:lfdl_app/pages/about_page.dart';
 
 
 void main() => runApp(MyApp());
@@ -35,6 +36,7 @@ class MyApp extends StatelessWidget {
       routes: <String, WidgetBuilder> {
         ReportPage.route: (context) => ReportPage(),
         TestPage.route: (context) => TestPage(),
+        AboutPage.route: (context) => AboutPage()
       },
     );
   }
