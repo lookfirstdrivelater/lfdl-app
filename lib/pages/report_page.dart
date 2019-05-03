@@ -40,7 +40,7 @@ class ReportPageState extends State<ReportPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: MapAppBar(mapController: mapController,),
+      appBar: MapAppBar(mapController: mapController, title: "Report",),
       drawer: buildDrawer(context, ReportPage.route),
       body: Padding(
         padding: EdgeInsets.all(8.0),
