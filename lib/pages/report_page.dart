@@ -6,6 +6,8 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:lfdl_app/gps.dart';
 import 'package:latlong/latlong.dart';
 import 'package:lfdl_app/server.dart';
+import 'package:lfdl_app/widgets/map_app_bar.dart';
+import 'package:lfdl_app/utils.dart';
 
 //Self-reporting page
 class ReportPage extends StatefulWidget {
@@ -23,13 +25,8 @@ class ReportPageState extends State<ReportPage> {
   @override
   void initState() {
     super.initState();
-    centerMap();
+    centerMap(mapController);
     mapPolylines.add(reportEvent.polyline);
-  }
-
-  void centerMap() async {
-    final position = await GPS.location();
-    mapController.move(position, 15.0);
   }
 
   void onTap(LatLng latLgn) {
@@ -43,20 +40,7 @@ class ReportPageState extends State<ReportPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text("Report"),
-        actions: <Widget>[
-          FlatButton(
-              onPressed: centerMap,
-              child: Row(children: <Widget>[
-                Icon(Icons.gps_fixed, color: Colors.white),
-                Text(
-                  "Center Map",
-                  style: TextStyle(color: Colors.white),
-                )
-              ])),
-        ],
-      ),
+      appBar: MapAppBar(mapController: mapController, title: "Report",),
       drawer: buildDrawer(context, ReportPage.route),
       body: Padding(
         padding: EdgeInsets.all(8.0),
@@ -74,7 +58,7 @@ class ReportPageState extends State<ReportPage> {
                   items: EventType.values
                       .map((eventType) => DropdownMenuItem(
                             value: eventType,
-                            child: Text(eventTypeToString(eventType)),
+                            child: Text(camelCaseToSpaceCase(eventTypeToString(eventType))),
                           ))
                       .toList(),
                   isExpanded: true,
@@ -93,7 +77,7 @@ class ReportPageState extends State<ReportPage> {
                   items: Severity.values
                       .map((severity) => DropdownMenuItem(
                             value: severity,
-                            child: Text(severityToString(severity)),
+                            child: Text(camelCaseToSpaceCase(severityToString(severity))),
                           ))
                       .toList(),
                   isExpanded: true,

@@ -6,6 +6,8 @@ import 'package:flutter/material.dart';
 import '../drawer.dart';
 import 'package:latlong/latlong.dart';
 import 'package:lfdl_app/server.dart';
+import 'package:lfdl_app/utils.dart';
+import 'package:lfdl_app/widgets/map_app_bar.dart';
 
 //Map display page
 class MapPage extends StatefulWidget {
@@ -16,6 +18,7 @@ class MapPage extends StatefulWidget {
 }
 
 class MapPageState extends State<MapPage> {
+
   final mapController = MapController();
   final mapPolylines = List<Polyline>();
   final circles = List<CircleMarker>();
@@ -23,12 +26,7 @@ class MapPageState extends State<MapPage> {
   @override
   void initState() {
     super.initState();
-    centerMapOnLocation();
-  }
-
-  void centerMapOnLocation() async {
-    final position = await GPS.location();
-    mapController.move(position, 15.0);
+    centerMap(mapController);
   }
 
   void addRoadEvents(List<RoadEvent> events) {
@@ -70,20 +68,13 @@ class MapPageState extends State<MapPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Map")),
+      appBar: MapAppBar(mapController: mapController, title: "Map"),
       drawer: buildDrawer(context, MapPage.route),
       body: Scrollbar(
           child: Padding(
         padding: EdgeInsets.all(8.0),
         child: Column(
           children: [
-            Padding(
-              padding: EdgeInsets.only(top: 8.0, bottom: 8.0),
-              child: FlatButton(
-                onPressed: centerMapOnLocation,
-                child: Text("Center Around Person"),
-              ),
-            ),
             Flexible(
               child: FlutterMap(
                 mapController: mapController,
