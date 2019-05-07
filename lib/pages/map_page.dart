@@ -18,10 +18,10 @@ class MapPage extends StatefulWidget {
 }
 
 class MapPageState extends State<MapPage> {
-
   final mapController = MapController();
+
   final mapPolylines = List<Polyline>();
-  final circles = List<CircleMarker>();
+  final mapRoadEvents = Set<RoadEvent>();
 
   @override
   void initState() {
@@ -31,39 +31,29 @@ class MapPageState extends State<MapPage> {
 
   void addRoadEvents(List<RoadEvent> events) {
     setState(() {
-      for (RoadEvent event in events) {
+      mapRoadEvents.addAll(events);
+      events.forEach((event) {
         mapPolylines.add(Polyline(
           points: event.points,
           color: eventColors[event.type],
           strokeWidth: 2.0,
         ));
-      }
+      });
     });
   }
 
-  ReportEvent reportEvent;
-
-  void onTap(LatLng latLgn) {
-    if (reportEvent != null) {
-      setState(() {
-        reportEvent.points.add(latLgn);
-      });
-    }
+  Future<void> updateMap(LatLngBounds bounds) async {
+    final events = await Server.queryRoadEvents(
+        bounds.north, bounds.east, bounds.south, bounds.west);
+    print("Number of returned events: ${events.length}");
+    setState(() {
+      addRoadEvents(events);
+    });
   }
 
-  void onUndoPressed() {
-    if (reportEvent != null) {
-      setState(() {
-        reportEvent.points.removeLast();
-      });
-    } else if (mapPolylines.length != 0) {
-      setState(() {
-        mapPolylines.removeLast();
-      });
-    }
+  void onPositionChanged(MapPosition position, bool hasGesture) async {
+    await updateMap(position.bounds);
   }
-
-  void onPositionChanged(MapPosition position, bool hasGesture) {}
 
   @override
   Widget build(BuildContext context) {
@@ -78,8 +68,7 @@ class MapPageState extends State<MapPage> {
             Flexible(
               child: FlutterMap(
                 mapController: mapController,
-                options: MapOptions(
-                    onTap: onTap, onPositionChanged: onPositionChanged),
+                options: MapOptions(onPositionChanged: onPositionChanged),
                 layers: [
                   TileLayerOptions(
                       urlTemplate:
@@ -88,7 +77,6 @@ class MapPageState extends State<MapPage> {
                   PolylineLayerOptions(
                     polylines: mapPolylines,
                   ),
-                  CircleLayerOptions(),
                 ],
               ),
             ),

@@ -99,7 +99,7 @@ class ReportPageState extends State<ReportPage> {
                   CircleLayerOptions(
                     circles: reportEvent?.points
                             ?.map((point) =>
-                                CircleMarker(point: point, radius: 10.0))
+                                CircleMarker(point: point, radius: 10.0, color: Color(0xFF0F5F50)))
                             ?.toList() ??
                         List(),
                   )

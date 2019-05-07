@@ -17,10 +17,10 @@ class Server {
 
 //  static const serverUrl = "https://stupidcpu.com/api";
 
-  static const serverUrl = "http://172.31.19.46:8080";
+  static const serverUrl = "http://172.31.19.210:8080";
 
   static Future<List<RoadEvent>> queryRoadEvents(
-      LatLng location, double top, double right, double bottom, double left) async {
+      double top, double right, double bottom, double left) async {
     final url =
         "$serverUrl/events/query?"
         "toplatitude=$top&"
@@ -64,7 +64,7 @@ class Server {
     assert(json['message'] == null);
 
     if(json['message'] != null) {
-      print("Upload Failed: json['message']");
+      print("Upload Failed: ${json['message']}");
     }
 
     assert(json['create'] != null);
