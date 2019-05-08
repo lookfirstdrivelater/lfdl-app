@@ -45,7 +45,7 @@ class MapPageState extends State<MapPage> {
   Future<void> updateMap(LatLngBounds bounds) async {
     final events = await Server.queryRoadEvents(
         bounds.north, bounds.east, bounds.south, bounds.west);
-    print("Number of returned events: ${events.length}");
+    print("Queried events: ${events.join("\n")}");
     setState(() {
       addRoadEvents(events);
     });

@@ -127,12 +127,32 @@ class ReportPageState extends State<ReportPage> {
               FlatButton(
                 color: Colors.blue,
                 onPressed: () async {
-                  if(reportEvent.points.isNotEmpty) {
+                  if(reportEvent.points.length > 1) {
                     reportEvent.startTime = DateTime.now().toUtc();
                     final event = await Server.uploadRoadEvent(reportEvent);
                     setState(() {
                       reportEvent = ReportEvent();
                     });
+                  } else {
+                    showDialog(
+                      context: context,
+                      builder: (BuildContext context) {
+                        // return object of type Dialog
+                        return AlertDialog(
+                          title: new Text("Error"),
+                          content: new Text("Must add at least 2 points to map to upload"),
+                          actions: <Widget>[
+                            // usually buttons at the bottom of the dialog
+                            new FlatButton(
+                              child: new Text("Close"),
+                              onPressed: () {
+                                Navigator.of(context).pop();
+                              },
+                            ),
+                          ],
+                        );
+                      },
+                    );
                   }
                 },
                 padding: EdgeInsets.all(8.0),

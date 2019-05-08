@@ -15,9 +15,9 @@ import 'dart:developer';
 class Server {
   static HttpClient httpClient = new HttpClient();
 
-//  static const serverUrl = "https://stupidcpu.com/api";
+  static const serverUrl = "https://stupidcpu.com/api";
 
-  static const serverUrl = "http://172.31.19.210:8080";
+//  static const serverUrl = "http://172.31.19.210:8080";
 
   static Future<List<RoadEvent>> queryRoadEvents(
       double top, double right, double bottom, double left) async {
@@ -49,26 +49,40 @@ class Server {
     return await response.transform(utf8.decoder).join();
   }
 
-  static Future<RoadEvent> uploadRoadEvent(ReportEvent event) async {
+  static Future<RoadEvent> uploadRoadEvent(ReportEvent reportEvent) async {
     final url = "$serverUrl/events/create?"
-        "starttime=${event.startTime.toIso8601String()}&"
-        "endtime=${event.endTime.toIso8601String()}&"
-        "points=${pointsToString(event.points)}&"
-        "type=${eventTypeToString(event.type)}&"
-        "severity=${severityToString(event.severity)}&"
-        "centerx=${event.centerX()}&"
-        "centery=${event.centerY()}";
+        "starttime=${reportEvent.startTime.toIso8601String()}&"
+        "endtime=${reportEvent.endTime.toIso8601String()}&"
+        "points=${pointsToString(reportEvent.points)}&"
+        "type=${eventTypeToString(reportEvent.type)}&"
+        "severity=${severityToString(reportEvent.severity)}&"
+        "centerx=${reportEvent.centerX()}&"
+        "centery=${reportEvent.centerY()}";
     final reply = await sendPostRequest(url);
     final json = jsonDecode(reply);
 
-    assert(json['message'] == null);
-
     if(json['message'] != null) {
       print("Upload Failed: ${json['message']}");
+      print("Url: $url");
     }
 
-    assert(json['create'] != null);
+    if(json['create'] == null) {
+      print("Upload Failed: 'create' is null in json");
+      print("Url: $url");
+    }
 
-    return RoadEvent.fromJson(json['create']);
+    final roadEvent = RoadEvent.fromJson(json['create']);
+
+    if(roadEvent != reportEvent) {
+      print("Uploaded RoadEvent does not equal ReportEvent");
+      print("RoadEvent: $roadEvent");
+      print("ReportEvent: $reportEvent");
+      print("Url: $url");
+    } else {
+      print("Sucessfully uploaded ReportEvent");
+      print("RoadEvent: $roadEvent");
+    }
+
+    return roadEvent;
   }
 }

@@ -16,8 +16,8 @@ List<LatLng> stringToPoints(String string) {
 String latLngToString(LatLng latLng) =>
     "(${latLng.latitude}, ${latLng.longitude})";
 
-String pointsToString(List<LatLng> list) =>
-    "${list.map(latLngToString).join(", ")}";
+String pointsToString(List<LatLng> points) =>
+    "${points.map(latLngToString).join(", ")}";
 
 bool listEquals(List<dynamic> list1, List<dynamic> list2) {
   if (list1.length != list2.length) return false;
@@ -30,11 +30,6 @@ bool listEquals(List<dynamic> list1, List<dynamic> list2) {
 //final millisMatcher = RegExp(r'\.\d+[zZ]?');
 
 DateTime parseDateString(String date) {
-//  final millisMatch = millisMatcher.firstMatch(date);
-//  assert(millisMatch != null);
-//  String millis = millisMatch[0];
-//  millis = millis.substring(0, min(7, millis.length));
-//  return DateTime.parse(date.substring(0, millisMatch.start) + millis + date.substring(millisMatch.end));
   return DateTime.parse(date);
 }
 

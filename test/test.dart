@@ -90,10 +90,10 @@ void main() {
       final uploadedRoadEvent = await Server.uploadRoadEvent(reportEvent);
       final equal = uploadedRoadEvent == reportEvent;
       expect(equal, isTrue);
-      final queriedRoadEvents1 = await Server.queryRoadEvents(reportEvent.centerY() + 5, reportEvent.centerX() + 5, reportEvent.centerY() - 5, reportEvent.centerX() - 5);
+      final queriedRoadEvents1 = await Server.queryRoadEvents(reportEvent.centerY() + 0.0001, reportEvent.centerX() + 0.0001, reportEvent.centerY() - 0.0001, reportEvent.centerX() - 0.0001);
       expect(queriedRoadEvents1.contains(uploadedRoadEvent), isTrue);
       await Server.deleteRoadEvent(uploadedRoadEvent.id);
-      final queriedRoadEvents2 = await Server.queryRoadEvents(reportEvent.centerY() + 5, reportEvent.centerX() + 5, reportEvent.centerY() - 5, reportEvent.centerX() - 5);
+      final queriedRoadEvents2 = await Server.queryRoadEvents(reportEvent.centerY() + 0.0001, reportEvent.centerX() + 0.0001, reportEvent.centerY() - 0.0001, reportEvent.centerX() - 0.0001);
       expect(queriedRoadEvents2.contains(uploadedRoadEvent), isFalse);
     });
 
