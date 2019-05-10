@@ -29,25 +29,12 @@ class MapPageState extends State<MapPage> {
     centerMap(mapController);
   }
 
-  void addRoadEvents(List<RoadEvent> events) {
-    setState(() {
-      mapRoadEvents.addAll(events);
-      events.forEach((event) {
-        mapPolylines.add(Polyline(
-          points: event.points,
-          color: eventColors[event.type],
-          strokeWidth: 2.0,
-        ));
-      });
-    });
-  }
-
   Future<void> updateMap(LatLngBounds bounds) async {
     final events = await Server.queryRoadEvents(
         bounds.north, bounds.east, bounds.south, bounds.west);
-    print("Queried events: ${events.join("\n")}");
+    print("Queried events: ${events.join("\n\t")}");
     setState(() {
-      addRoadEvents(events);
+      mapRoadEvents.addAll(events);
     });
   }
 
@@ -75,7 +62,7 @@ class MapPageState extends State<MapPage> {
                           "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
                       subdomains: ['a', 'b', 'c']),
                   PolylineLayerOptions(
-                    polylines: mapPolylines,
+                    polylines: mapRoadEvents.map((event) => event.polyline),
                   ),
                 ],
               ),

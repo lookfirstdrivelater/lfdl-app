@@ -48,8 +48,14 @@ class RoadEvent {
 
   Duration duration() => endTime.difference(startTime);
 
-  Polyline toPolyline() =>
-      Polyline(points: points, color: eventColors[type], strokeWidth: 2.0);
+  Polyline get polyline =>
+      Polyline(points: points, color: eventColors[type], strokeWidth: 3.0);
+
+  ReportEvent toReportEvent() => ReportEvent()
+    ..points = points
+    ..startTime = startTime
+    ..type = type
+    ..severity = severity;
 
   @override
   bool operator ==(dynamic other) =>
@@ -68,6 +74,7 @@ class RoadEvent {
 
 class ReportEvent {
   DateTime startTime;
+
   DateTime get endTime => startTime.add(severityDuration(severity));
   List<LatLng> points;
   EventType type;
@@ -90,7 +97,7 @@ class ReportEvent {
       points.length;
 
   Polyline get polyline =>
-      Polyline(points: points, color: eventColors[type], strokeWidth: 2.0);
+      Polyline(points: points, color: eventColors[type], strokeWidth: 5.0);
 
   @override
   String toString() =>

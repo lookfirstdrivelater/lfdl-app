@@ -3,14 +3,17 @@ import 'dart:math';
 import 'package:flutter_map/flutter_map.dart';
 import 'gps.dart';
 
-const numberPattern = r'-?\d{1,3}(?:\.\d{1,9})?';
+const numberPattern = r'-?\d{1,3}(?:\.\d+)?';
 
 final latLngMatcher = RegExp('\\(($numberPattern), ?($numberPattern)\\)');
 
 List<LatLng> stringToPoints(String string) {
   final matches = latLngMatcher.allMatches(string);
   if (matches == null) throw FormatException("Match not found in: $string");
-  return matches.map((match) => LatLng(double.parse(match.group(1)), double.parse(match.group(2)))).toList();
+  return matches
+      .map((match) =>
+          LatLng(double.parse(match.group(1)), double.parse(match.group(2))))
+      .toList();
 }
 
 String latLngToString(LatLng latLng) =>
@@ -40,4 +43,17 @@ void centerMap(MapController mapController) async {
 
 final capsMatcher = RegExp("[A-Z]");
 
-String camelCaseToSpaceCase(String camelCase) => camelCase[0].toUpperCase() + camelCase.substring(1).replaceAllMapped(capsMatcher, (match) => " ${match[0]}");
+String camelCaseToSpaceCase(String camelCase) =>
+    camelCase[0].toUpperCase() +
+    camelCase
+        .substring(1)
+        .replaceAllMapped(capsMatcher, (match) => " ${match[0]}");
+
+double distanceBetween(LatLng point1, LatLng point2) => sqrt((point1.longitude -
+            point2.longitude) *
+        (point1.longitude - point2.longitude) +
+    (point1.latitude - point2.latitude) * (point1.latitude - point2.latitude));
+
+void showDialogBox() {
+
+}

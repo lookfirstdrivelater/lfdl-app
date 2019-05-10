@@ -45,6 +45,10 @@ class Server {
   static Future<String> sendPostRequest(String url) async {
     HttpClientRequest request = await httpClient.postUrl(Uri.parse(url));
     HttpClientResponse response = await request.close();
+    if(response.statusCode != 200) {
+      print("Post request was unsucessful");
+      print("Status Code Returned: ${response.statusCode}");
+    }
 //    httpClient.close();
     return await response.transform(utf8.decoder).join();
   }
@@ -78,9 +82,6 @@ class Server {
       print("RoadEvent: $roadEvent");
       print("ReportEvent: $reportEvent");
       print("Url: $url");
-    } else {
-      print("Sucessfully uploaded ReportEvent");
-      print("RoadEvent: $roadEvent");
     }
 
     return roadEvent;
