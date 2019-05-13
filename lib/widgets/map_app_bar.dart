@@ -2,14 +2,15 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:lfdl_app/utils.dart';
+import 'package:lfdl_app/road_event_map.dart';
 
 class MapAppBar extends AppBar {
-  final MapController mapController;
+  final RoadEventMap roadEventMap;
 
-  MapAppBar({this.mapController, String title})
+  MapAppBar({this.roadEventMap, String title})
       : super(title: Text(title), actions: <Widget>[
           FlatButton(
-              onPressed: () => centerMap(mapController),
+              onPressed: () => roadEventMap.centerMap(),
               child: Row(children: <Widget>[
                 Icon(Icons.gps_fixed, color: Colors.white),
                 Text(

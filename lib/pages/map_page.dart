@@ -8,6 +8,8 @@ import 'package:latlong/latlong.dart';
 import 'package:lfdl_app/server.dart';
 import 'package:lfdl_app/utils.dart';
 import 'package:lfdl_app/widgets/map_app_bar.dart';
+import 'package:lfdl_app/road_event_map.dart';
+
 
 //Map display page
 class MapPage extends StatefulWidget {
@@ -18,34 +20,19 @@ class MapPage extends StatefulWidget {
 }
 
 class MapPageState extends State<MapPage> {
-  final mapController = MapController();
 
-  final mapPolylines = List<Polyline>();
-  final mapRoadEvents = Set<RoadEvent>();
+  final roadEventMap = RoadEventMap();
 
   @override
   void initState() {
     super.initState();
-    centerMap(mapController);
-  }
-
-  Future<void> updateMap(LatLngBounds bounds) async {
-    final events = await Server.queryRoadEvents(
-        bounds.north, bounds.east, bounds.south, bounds.west);
-    print("Queried events: ${events.join("\n\t")}");
-    setState(() {
-      mapRoadEvents.addAll(events);
-    });
-  }
-
-  void onPositionChanged(MapPosition position, bool hasGesture) async {
-    await updateMap(position.bounds);
+//    roadEventMap.centerMap();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: MapAppBar(mapController: mapController, title: "Map"),
+      appBar: MapAppBar(roadEventMap: roadEventMap, title: "Map"),
       drawer: buildDrawer(context, MapPage.route),
       body: Scrollbar(
           child: Padding(
@@ -54,18 +41,21 @@ class MapPageState extends State<MapPage> {
           children: [
             Flexible(
               child: FlutterMap(
-                mapController: mapController,
-                options: MapOptions(onPositionChanged: onPositionChanged),
+                mapController: roadEventMap.controller,
+                options: MapOptions(onPositionChanged: (position, hasGesture) async {
+                  await roadEventMap.updateEvents(position);
+                  setState(() {});
+                }),
                 layers: [
                   TileLayerOptions(
                       urlTemplate:
-                          "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+                      "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
                       subdomains: ['a', 'b', 'c']),
                   PolylineLayerOptions(
-                    polylines: mapRoadEvents.map((event) => event.polyline),
+                    polylines: roadEventMap.polylines,
                   ),
                 ],
-              ),
+              )
             ),
           ],
         ),

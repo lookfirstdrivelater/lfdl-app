@@ -14,7 +14,7 @@ import 'package:lfdl_app/utils.dart';
 import 'package:lfdl_app/server.dart';
 import 'dart:convert';
 import 'package:lfdl_app/gps.dart';
-
+import 'package:flutter_map/flutter_map.dart';
 
 void main() {
   group('Road Event', () {
@@ -99,6 +99,15 @@ void main() {
 
     test('Camel case to space case', () {
       expect(camelCaseToSpaceCase('camelCase'), 'Camel Case');
+    });
+
+    test('LatLngBounds extending', () {
+      var bounds = extendBounds(LatLngBounds(LatLng(10.0, 10.0), LatLng(20.0, 20.0)));
+      expect(bounds.sw, LatLng(0.0, 0.0));
+      expect(bounds.ne, LatLng(30.0, 30.0));
+      bounds = extendBounds(LatLngBounds(LatLng(30.0, 20.0), LatLng(40.0, 50.0)));
+      expect(bounds.sw, LatLng(20.0, -10.0));
+      expect(bounds.ne, LatLng(50.0, 80.0));
     });
   });
 }

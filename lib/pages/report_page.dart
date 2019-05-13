@@ -9,6 +9,7 @@ import 'package:lfdl_app/server.dart';
 import 'package:lfdl_app/widgets/map_app_bar.dart';
 import 'package:lfdl_app/utils.dart';
 import 'dart:math';
+import 'package:lfdl_app/road_event_map.dart';
 
 //Self-reporting page
 class ReportPage extends StatefulWidget {
@@ -19,39 +20,53 @@ class ReportPage extends StatefulWidget {
 }
 
 class ReportPageState extends State<ReportPage> {
-  final mapController = MapController();
+  RoadEventMap roadEventMap = RoadEventMap();
   ReportEvent reportEvent = ReportEvent();
-  final roadEvents = Set<RoadEvent>();
 
   @override
   void initState() {
     super.initState();
-    centerMap(mapController);
+//    roadEventMap.centerMap();
   }
 
-  void onTap(LatLng point) {
-    setState(() {
-      reportEvent.points.add(point);
-    });
+  void onTap(LatLng tappedPoint) {
+    if (mode == ReportMode.submitting) {
+      setState(() {
+        reportEvent.points.add(tappedPoint);
+      });
+    } else if (mode == ReportMode.editing) {
+      double minDistance = double.infinity;
+      final selectedRoadEvent =
+          roadEventMap.roadEvents.reduce((closestEvent, event) {
+        final eventMinDistance = event.points.fold<double>(
+            double.infinity,
+            (minDistance, point) =>
+                min(minDistance, distanceBetween(point, tappedPoint)));
+        return eventMinDistance < minDistance ? event : closestEvent;
+      });
+      roadEventMap.roadEvents.remove(selectedRoadEvent);
+      reportEvent = selectedRoadEvent.toReportEvent();
+    }
   }
+
+  ReportMode mode = ReportMode.submitting;
 
   int selectedRoadEventId;
 
-  void onLongTap(LatLng tappedPoint) {
-    double minDistance = double.infinity;
-    final selectedRoadEvent = roadEvents.reduce((closestEvent, event) {
-      final eventMinDistance = event.points.fold<double>(
-          double.infinity, (minDistance, point) =>
-          min(minDistance, distanceBetween(point, tappedPoint)));
-      return eventMinDistance < minDistance ? event : closestEvent;
-    });
-    roadEvents.remove(selectedRoadEvent);
-    reportEvent = selectedRoadEvent.toReportEvent();
-  }
-
   void onRemoveRoadEvent() {
-    Server.deleteRoadEvent(selectedRoadEventId);
-
+    if (selectedRoadEventId != null) {
+      setState(() {
+        showConfirmationDialog(
+          context: context,
+          title: "Remove Road Event",
+          content: "Are you sure you want to remove the road event?",
+          onYesPressed: () {
+            Server.deleteRoadEvent(selectedRoadEventId);
+            selectedRoadEventId = null;
+          },
+        );
+      });
+    }
   }
 
   void onClearPointsPressed() {
@@ -70,55 +85,46 @@ class ReportPageState extends State<ReportPage> {
 
   void onSubmitEventPressed() {
     if (reportEvent.points.length > 1) {
-      showDialog(
+      showConfirmationDialog(
         context: context,
-        builder: (BuildContext context) {
-          // return object of type Dialog
-          return AlertDialog(
-            title: Text("Upload Event"),
-            content: Text("Are you sure you want to upload the road event?"),
-            actions: <Widget>[
-              // usually buttons at the bottom of the dialog
-              FlatButton(
-                child: Text("Yes"),
-                onPressed: () {
-                  reportEvent.startTime = DateTime.now().toUtc();
-                  Server.uploadRoadEvent(reportEvent);
-                  setState(() {
-                    reportEvent = ReportEvent();
-                  });
-                  Navigator.of(context).pop();
-                },
-              ),
-              FlatButton(
-                child: Text("No"),
-                onPressed: () {
-                  Navigator.of(context).pop();
-                },
-              ),
-            ],
-          );
+        title: "Create Event",
+        content: "Are you sure you want to create the road event?",
+        onYesPressed: () {
+          reportEvent.startTime = DateTime.now().toUtc();
+          Server.uploadRoadEvent(reportEvent);
+          setState(() {
+            reportEvent = ReportEvent();
+          });
         },
       );
     } else {
-      showDialog(
+      showErrorDialog(
         context: context,
-        builder: (BuildContext context) {
-          // return object of type Dialog
-          return AlertDialog(
-            title: Text("Error"),
-            content: Text("Must add at least 2 points to map to upload"),
-            actions: <Widget>[
-              // usually buttons at the bottom of the dialog
-              FlatButton(
-                child: Text("Close"),
-                onPressed: () {
-                  Navigator.of(context).pop();
-                },
-              ),
-            ],
-          );
+        content: "There must be at least two points to upload event",
+      );
+    }
+  }
+
+  void onUpdateEventPressed() {
+    if (reportEvent.points.length > 1) {
+      showConfirmationDialog(
+        context: context,
+        title: "Update Road Event",
+        content: "Are you sure you want to update the road event?",
+        onYesPressed: () {
+          reportEvent.startTime = DateTime.now().toUtc();
+          Server.uploadRoadEvent(reportEvent);
+          Server.deleteRoadEvent(selectedRoadEventId);
+          setState(() {
+            reportEvent = ReportEvent();
+            selectedRoadEventId = null;
+          });
         },
+      );
+    } else {
+      showErrorDialog(
+        context: context,
+        content: "There must be at least two points to upload event",
       );
     }
   }
@@ -127,7 +133,7 @@ class ReportPageState extends State<ReportPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: MapAppBar(
-        mapController: mapController,
+        roadEventMap: roadEventMap,
         title: "Report",
       ),
       drawer: buildDrawer(context, ReportPage.route),
@@ -173,20 +179,47 @@ class ReportPageState extends State<ReportPage> {
                   isExpanded: true,
                   hint: Text("Select a severity")),
             ),
-            Text('Select a reporting area below', textAlign: TextAlign.left),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
+                RaisedButton(
+                  color: mode == ReportMode.editing ? Colors.grey : Colors.blue,
+                  child:
+                      Text("Submitting", style: TextStyle(color: Colors.white)),
+                  onPressed: () {
+                    setState(() {
+                      mode = ReportMode.submitting;
+                    });
+                  },
+                ),
+                RaisedButton(
+                  color: mode == ReportMode.editing ? Colors.blue : Colors.grey,
+                  child: Text("Editing", style: TextStyle(color: Colors.white)),
+                  onPressed: () {
+                    setState(() {
+                      mode = ReportMode.editing;
+                    });
+                  },
+                ),
+              ],
+            ),
             Flexible(
               child: FlutterMap(
-                mapController: mapController,
-                options: MapOptions(onTap: onTap),
+                mapController: roadEventMap.controller,
+                options: MapOptions(
+                    onTap: onTap,
+                    onPositionChanged: (position, hasGesture) async {
+                      await roadEventMap.updateEvents(position);
+                      setState(() {});
+                    }),
                 layers: [
                   TileLayerOptions(
                       urlTemplate:
                           "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
                       subdomains: ['a', 'b', 'c']),
                   PolylineLayerOptions(
-                    polylines:
-                        roadEvents.map((event) => event.polyline).toList()
-                          ..add(reportEvent.polyline),
+                    polylines: roadEventMap.polylines
+                      ..add(reportEvent.polyline),
                   ),
                   CircleLayerOptions(
                     circles: reportEvent.points
@@ -199,7 +232,7 @@ class ReportPageState extends State<ReportPage> {
                 ],
               ),
             ),
-            Row(mainAxisAlignment: MainAxisAlignment.center, children: <Widget>[
+            Row(mainAxisAlignment: MainAxisAlignment.center, children: [
               FlatButton(
                 color: Colors.blue,
                 onPressed: onUndoPressed,
@@ -234,28 +267,70 @@ class ReportPageState extends State<ReportPage> {
                   ],
                 ),
               ),
-              FlatButton(
-                color: Colors.blue,
-                onPressed: onSubmitEventPressed,
-                padding: EdgeInsets.all(8.0),
-                child: Row(
-                  children: <Widget>[
-                    Icon(
-                      Icons.check,
-                      color: Colors.white,
-                    ),
-                    Text(
-                      'Submit event',
-                      style: TextStyle(color: Colors.white),
-                    )
-                  ],
-                ),
-              ),
             ]),
-//            Text("lastCondition: $lastCondition, lastSeverity: $lastSeverity")
+            Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: mode == ReportMode.submitting
+                    ? [
+                        FlatButton(
+                          color: Colors.blue,
+                          onPressed: onSubmitEventPressed,
+                          padding: EdgeInsets.all(8.0),
+                          child: Row(
+                            children: <Widget>[
+                              Icon(
+                                Icons.check,
+                                color: Colors.white,
+                              ),
+                              Text(
+                                'Submit event',
+                                style: TextStyle(color: Colors.white),
+                              )
+                            ],
+                          ),
+                        ),
+                      ]
+                    : [
+                        FlatButton(
+                          color: Colors.blue,
+                          onPressed: onRemoveRoadEvent,
+                          padding: EdgeInsets.all(8.0),
+                          child: Row(
+                            children: <Widget>[
+                              Icon(
+                                Icons.delete,
+                                color: Colors.white,
+                              ),
+                              Text(
+                                'Remove Event',
+                                style: TextStyle(color: Colors.white),
+                              )
+                            ],
+                          ),
+                        ),
+                        FlatButton(
+                          color: Colors.blue,
+                          onPressed: onSubmitEventPressed,
+                          padding: EdgeInsets.all(8.0),
+                          child: Row(
+                            children: <Widget>[
+                              Icon(
+                                Icons.update,
+                                color: Colors.white,
+                              ),
+                              Text(
+                                'Update Event',
+                                style: TextStyle(color: Colors.white),
+                              )
+                            ],
+                          ),
+                        ),
+                      ]),
           ],
         ),
       ),
     );
   }
 }
+
+enum ReportMode { submitting, editing }
