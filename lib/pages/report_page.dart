@@ -19,10 +19,7 @@ class ReportPage extends StatefulWidget {
 
 class ReportPageState extends State<ReportPage> {
   RoadEventMap roadEventMap = RoadEventMap();
-  ReportEvent reportEvent = ReportEvent();
-
   ReportMode mode = ReportMode.submitting;
-  RoadEvent selectedRoadEvent;
 
   @override
   void initState() {
@@ -33,38 +30,30 @@ class ReportPageState extends State<ReportPage> {
   }
 
   void onTap(LatLng tappedPoint) {
-    if (mode == ReportMode.submitting || selectedRoadEvent != null) {
+    if (mode == ReportMode.submitting ||
+        roadEventMap.selectedRoadEvent != null) {
       setState(() {
-        reportEvent.points.add(tappedPoint);
+        roadEventMap.reportEvent.points.add(tappedPoint);
       });
-    } else if (mode == ReportMode.editing &&
-        roadEventMap.roadEvents.isNotEmpty) {
-      double minDistance = double.infinity;
-      selectedRoadEvent = roadEventMap.roadEvents.reduce((closestEvent, event) {
-        final eventMinDistance = event.points.fold<double>(
-            double.infinity,
-            (minDistance, point) =>
-                min(minDistance, distanceBetween(point, tappedPoint)));
-        return eventMinDistance < minDistance ? event : closestEvent;
-      });
+    } else if (mode == ReportMode.editing) {
       setState(() {
-        roadEventMap.roadEvents.remove(selectedRoadEvent);
-        reportEvent = selectedRoadEvent.toReportEvent();
+        roadEventMap.selectEvent(tappedPoint);
       });
     }
   }
 
   void onRemoveRoadEvent() {
-    if (selectedRoadEvent != null) {
+    if (roadEventMap.selectedRoadEvent != null) {
       showConfirmationDialog(
         context: context,
         title: "Remove Road Event",
         content: "Are you sure you want to remove the road event?",
         onYesPressed: () async {
-          await Server.deleteRoadEvent(selectedRoadEvent.id);
+          await Server.deleteRoadEvent(roadEventMap.selectedRoadEvent.id);
+          roadEventMap.selectedRoadEvent = null;
+          await roadEventMap.updateEvents(roadEventMap.controller.bounds);
           setState(() {
-            selectedRoadEvent = null;
-            reportEvent = ReportEvent();
+            roadEventMap.reportEvent = ReportEvent();
           });
         },
       );
@@ -73,39 +62,41 @@ class ReportPageState extends State<ReportPage> {
 
   void onClearPointsPressed() {
     setState(() {
-      reportEvent.points = List();
+      roadEventMap.reportEvent.points = List();
     });
   }
 
   void onUndoPressed() {
-    if (reportEvent.points.isNotEmpty) {
+    if (roadEventMap.reportEvent.points.isNotEmpty) {
       setState(() {
-        reportEvent.points.removeLast();
+        roadEventMap.reportEvent.points.removeLast();
       });
     }
   }
 
   void onCancelPressed() {
-    if (selectedRoadEvent != null) {
-      roadEventMap.roadEvents.add(selectedRoadEvent);
+    if (roadEventMap.selectedRoadEvent != null) {
+      roadEventMap.roadEvents.add(roadEventMap.selectedRoadEvent);
     }
     setState(() {
-      reportEvent = ReportEvent();
+      roadEventMap.selectedRoadEvent = null;
+      roadEventMap.reportEvent = ReportEvent();
     });
   }
 
   void onSubmitEventPressed() {
-    if (reportEvent.points.length > 1) {
+    if (roadEventMap.reportEvent.points.length > 1) {
       showConfirmationDialog(
         context: context,
         title: "Create Event",
         content: "Are you sure you want to create the road event?",
         onYesPressed: () async {
-          reportEvent.startTime = DateTime.now().toUtc();
-          await Server.uploadRoadEvent(reportEvent);
+          roadEventMap.reportEvent.startTime = DateTime.now().toUtc();
+          await Server.uploadRoadEvent(roadEventMap.reportEvent);
+          roadEventMap.selectedRoadEvent = null;
           await roadEventMap.updateEvents(roadEventMap.controller.bounds);
           setState(() {
-            reportEvent = ReportEvent();
+            roadEventMap.reportEvent = ReportEvent();
           });
         },
       );
@@ -118,19 +109,20 @@ class ReportPageState extends State<ReportPage> {
   }
 
   void onUpdateEventPressed() {
-    if (reportEvent.points.length > 1 && selectedRoadEvent != null) {
+    if (roadEventMap.reportEvent.points.length > 1 &&
+        roadEventMap.selectedRoadEvent != null) {
       showConfirmationDialog(
         context: context,
         title: "Update Road Event",
         content: "Are you sure you want to update the road event?",
         onYesPressed: () async {
-          reportEvent.startTime = DateTime.now().toUtc();
-          await Server.deleteRoadEvent(selectedRoadEvent.id);
-          await Server.uploadRoadEvent(reportEvent);
+          roadEventMap.reportEvent.startTime = DateTime.now().toUtc();
+          await Server.deleteRoadEvent(roadEventMap.selectedRoadEvent.id);
+          await Server.uploadRoadEvent(roadEventMap.reportEvent);
           await roadEventMap.updateEvents(roadEventMap.controller.bounds);
           setState(() {
-            reportEvent = ReportEvent();
-            selectedRoadEvent = null;
+            roadEventMap.reportEvent = ReportEvent();
+            roadEventMap.selectedRoadEvent = null;
           });
         },
       );
@@ -168,10 +160,10 @@ class ReportPageState extends State<ReportPage> {
             Padding(
               padding: EdgeInsets.only(top: 8.0, bottom: 8.0),
               child: DropdownButton(
-                  value: reportEvent.type,
+                  value: roadEventMap.reportEvent.type,
                   onChanged: (type) {
                     setState(() {
-                      reportEvent.type = type;
+                      roadEventMap.reportEvent.type = type;
                     });
                   },
                   items: EventType.values
@@ -187,10 +179,10 @@ class ReportPageState extends State<ReportPage> {
             Padding(
               padding: EdgeInsets.only(top: 8.0, bottom: 8.0),
               child: DropdownButton(
-                  value: reportEvent.severity,
+                  value: roadEventMap.reportEvent.severity,
                   onChanged: (severity) {
                     setState(() {
-                      reportEvent.severity = severity;
+                      roadEventMap.reportEvent.severity = severity;
                     });
                   },
                   items: Severity.values
@@ -213,10 +205,10 @@ class ReportPageState extends State<ReportPage> {
                   onPressed: () {
                     setState(() {
                       mode = ReportMode.submitting;
-                      if (selectedRoadEvent != null) {
-                        roadEventMap.roadEvents.add(selectedRoadEvent);
-                        selectedRoadEvent = null;
-                        reportEvent = ReportEvent();
+                      if (roadEventMap.selectedRoadEvent != null) {
+                        roadEventMap.selectedRoadEvent = null;
+                        roadEventMap.reportEvent = ReportEvent();
+                        roadEventMap.updateEvents(roadEventMap.controller.bounds);
                       }
                     });
                   },
@@ -227,7 +219,7 @@ class ReportPageState extends State<ReportPage> {
                   onPressed: () {
                     setState(() {
                       mode = ReportMode.editing;
-                      reportEvent = ReportEvent();
+                      roadEventMap.reportEvent = ReportEvent();
                     });
                   },
                 ),
@@ -249,15 +241,10 @@ class ReportPageState extends State<ReportPage> {
                       subdomains: ['a', 'b', 'c']),
                   PolylineLayerOptions(
                     polylines: roadEventMap.polylines
-                      ..add(reportEvent.polyline),
+                      ..add(roadEventMap.reportEvent.polyline),
                   ),
                   CircleLayerOptions(
-                    circles: reportEvent.points
-                        .map((point) => CircleMarker(
-                            point: point,
-                            radius: 5.0,
-                            color: Color(0xFF0F5F50)))
-                        .toList(),
+                    circles: roadEventMap.circleMarkers,
                   )
                 ],
               ),

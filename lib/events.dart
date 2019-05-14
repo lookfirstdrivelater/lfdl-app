@@ -7,6 +7,7 @@ import 'dart:core';
 import 'package:queries/collections.dart';
 import 'utils.dart';
 import 'dart:math';
+import 'package:flutter/material.dart';
 
 class RoadEvent {
   final int id;
@@ -48,8 +49,12 @@ class RoadEvent {
 
   Duration duration() => endTime.difference(startTime);
 
-  Polyline get polyline =>
-      Polyline(points: points, color: eventColors[type], strokeWidth: 3.0);
+  Polyline get polyline => Polyline(
+      points: points,
+      color: eventColors[type],
+      strokeWidth: 3.0,
+      borderColor: Colors.black,
+  borderStrokeWidth: 1.0);
 
   ReportEvent toReportEvent() => ReportEvent()
     ..points = List.from(points)
@@ -86,6 +91,11 @@ class ReportEvent {
     severity = Severity.medium;
   }
 
+  ReportEvent.from(ReportEvent event) {
+    type = event.type;
+    severity = event.severity;
+  }
+
   double centerX() =>
       points
           .map((latLng) => latLng.longitude)
@@ -107,8 +117,8 @@ class ReportEvent {
 const eventColors = <EventType, Color>{
   EventType.snow: Color(0xFFFFFFFF),
   EventType.blackIce: Color(0xFF000000),
-  EventType.slush: Color(0xFFFFFF00),
-  EventType.ice: Color(0xFF00FFFF)
+  EventType.slush: Color(0xFFFFFF99),
+  EventType.ice: Color(0xFF99FFFF)
 };
 
 String _enumToString(dynamic enumeration) {

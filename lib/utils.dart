@@ -5,7 +5,7 @@ import 'gps.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter/material.dart';
-
+import 'package:intl/intl.dart';
 
 const numberPattern = r'-?\d{1,3}(?:\.\d+)?';
 
@@ -37,6 +37,8 @@ bool listEquals(List<dynamic> list1, List<dynamic> list2) {
 DateTime parseDateString(String date) {
   return DateTime.parse(date);
 }
+
+final formatter = DateFormat("MM/dd h:mm a");
 
 LatLngBounds extendBounds(LatLngBounds bounds) {
   try {

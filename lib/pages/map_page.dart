@@ -1,14 +1,17 @@
-import 'package:flutter_map/flutter_map.dart';
-import 'package:lfdl_app/gps.dart';
-import 'package:flutter/widgets.dart';
-import 'package:lfdl_app/events.dart';
+import 'dart:async';
+import 'dart:math';
+
 import 'package:flutter/material.dart';
-import '../drawer.dart';
+import 'package:flutter/widgets.dart';
+import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong/latlong.dart';
+import 'package:lfdl_app/events.dart';
+import 'package:lfdl_app/gps.dart';
+import 'package:lfdl_app/road_event_map.dart';
 import 'package:lfdl_app/server.dart';
 import 'package:lfdl_app/utils.dart';
-import 'package:lfdl_app/road_event_map.dart';
-import 'dart:async';
+
+import '../drawer.dart';
 
 //Map display page
 class MapPage extends StatefulWidget {
@@ -24,8 +27,17 @@ class MapPageState extends State<MapPage> {
   @override
   void initState() {
     super.initState();
-    roadEventMap.centerMap().then((e) {
-      setState(() {});
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await roadEventMap.centerMap();
+      setState(() {
+
+      });
+    });
+  }
+
+  void onTap(LatLng tappedPoint) {
+    setState(() {
+      roadEventMap.selectEvent(tappedPoint);
     });
   }
 
@@ -53,14 +65,29 @@ class MapPageState extends State<MapPage> {
         padding: EdgeInsets.all(8.0),
         child: Column(
           children: [
+            Column(
+              children: roadEventMap.selectedRoadEvent != null
+                  ? <Widget>[
+                      Text(
+                          "Type: ${camelCaseToSpaceCase(eventTypeToString(roadEventMap.selectedRoadEvent.type))}"),
+                      Text(
+                          "Severity: ${camelCaseToSpaceCase(severityToString(roadEventMap.selectedRoadEvent.severity))}"),
+                      Text(
+                          "Submitted Time: ${formatter.format(roadEventMap.selectedRoadEvent.startTime.toLocal())}"),
+                      Text(
+                          "Expire Time: ${formatter.format(roadEventMap.selectedRoadEvent.startTime.toLocal())}")
+                    ]
+                  : [],
+            ),
             Flexible(
                 child: FlutterMap(
               mapController: roadEventMap.controller,
-              options:
-                  MapOptions(onPositionChanged: (position, hasGesture) async {
-                await roadEventMap.checkForUpdate(position.bounds);
-                setState(() {});
-              }),
+              options: MapOptions(
+                  onPositionChanged: (position, hasGesture) async {
+                    await roadEventMap.checkForUpdate(position.bounds);
+                    setState(() {});
+                  },
+                  onTap: onTap),
               layers: [
                 TileLayerOptions(
                     urlTemplate:
@@ -69,6 +96,9 @@ class MapPageState extends State<MapPage> {
                 PolylineLayerOptions(
                   polylines: roadEventMap.polylines,
                 ),
+                CircleLayerOptions(
+                  circles: roadEventMap.circleMarkers,
+                )
               ],
             )),
           ],
