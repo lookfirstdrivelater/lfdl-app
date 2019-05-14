@@ -6,38 +6,43 @@ import 'package:flutter/material.dart';
 import 'package:latlong/latlong.dart';
 import 'package:lfdl_app/server.dart';
 import 'package:lfdl_app/utils.dart';
-import 'package:lfdl_app/widgets/map_app_bar.dart';
+import 'dart:async';
 
 class RoadEventMap {
   final controller = MapController();
   final roadEvents = List<RoadEvent>();
-  LatLngBounds bounds;
+  LatLngBounds extendedBounds;
 
   List<Polyline> get polylines =>
       roadEvents.map((event) => event.polyline).toList();
 
-  void centerMap() async {
+  Future<void> centerMap() async {
     final position = await GPS.location();
     controller.move(position, 15.0);
+    await updateEvents(controller.bounds);
   }
 
-  Future<void> setBounds(LatLngBounds newBounds) async {
-    bounds = extendBounds(newBounds);
+  Future<void> checkForUpdate(LatLngBounds bounds) {
+    if (extendedBounds == null) {
+      setExtendedBounds(bounds);
+    } else if (extendedBounds.containsBounds(bounds) == false) {
+      updateEvents(bounds);
+    }
+  }
+
+  Future<void> updateEvents(LatLngBounds bounds) async {
+    if(bounds.north - bounds.south < 10.0 && bounds.west - bounds.east < 10.0) {
+      setExtendedBounds(bounds);
+    } else {
+      roadEvents.clear();
+    }
+  }
+
+  Future<void> setExtendedBounds(LatLngBounds bounds) async {
+    extendedBounds = extendBounds(bounds);
     final events = await Server.queryRoadEvents(
-        bounds.north, bounds.east, bounds.south, bounds.west);
+        extendedBounds.north, extendedBounds.east, extendedBounds.south, extendedBounds.west);
     print("Queried events: ${events.join("\n\t")}");
     roadEvents.addAll(events);
-  }
-
-  Future<void> updateEvents(MapPosition position) async {
-    if (bounds == null) {
-      setBounds(position.bounds);
-    } else if (bounds.containsBounds(position.bounds) == false) {
-      if(bounds.north - bounds.south < 10.0 && bounds.west - bounds.east < 10.0) {
-        setBounds(position.bounds);
-      } else {
-        roadEvents.clear();
-      }
-    }
   }
 }

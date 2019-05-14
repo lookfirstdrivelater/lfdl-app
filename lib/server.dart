@@ -1,15 +1,9 @@
-import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:flutter_map/flutter_map.dart';
-import 'package:latlong/latlong.dart';
-import 'package:http/http.dart' as http;
-import 'package:lfdl_app/gps.dart';
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+
 import 'events.dart';
 import 'utils.dart';
-import 'dart:developer';
-
 
 //Wrapper class for sending and receiving data from server database
 class Server {

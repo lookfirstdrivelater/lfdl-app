@@ -3,10 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:lfdl_app/events.dart';
 import '../drawer.dart';
 import 'package:flutter_map/flutter_map.dart';
-import 'package:lfdl_app/gps.dart';
 import 'package:latlong/latlong.dart';
 import 'package:lfdl_app/server.dart';
-import 'package:lfdl_app/widgets/map_app_bar.dart';
 import 'package:lfdl_app/utils.dart';
 import 'dart:math';
 import 'package:lfdl_app/road_event_map.dart';
@@ -23,49 +21,53 @@ class ReportPageState extends State<ReportPage> {
   RoadEventMap roadEventMap = RoadEventMap();
   ReportEvent reportEvent = ReportEvent();
 
+  ReportMode mode = ReportMode.submitting;
+  RoadEvent selectedRoadEvent;
+
   @override
   void initState() {
     super.initState();
-//    roadEventMap.centerMap();
+    roadEventMap.centerMap().then((e) {
+      setState(() {});
+    });
   }
 
   void onTap(LatLng tappedPoint) {
-    if (mode == ReportMode.submitting) {
+    if (mode == ReportMode.submitting || selectedRoadEvent != null) {
       setState(() {
         reportEvent.points.add(tappedPoint);
       });
-    } else if (mode == ReportMode.editing) {
+    } else if (mode == ReportMode.editing &&
+        roadEventMap.roadEvents.isNotEmpty) {
       double minDistance = double.infinity;
-      final selectedRoadEvent =
-          roadEventMap.roadEvents.reduce((closestEvent, event) {
+      selectedRoadEvent = roadEventMap.roadEvents.reduce((closestEvent, event) {
         final eventMinDistance = event.points.fold<double>(
             double.infinity,
             (minDistance, point) =>
                 min(minDistance, distanceBetween(point, tappedPoint)));
         return eventMinDistance < minDistance ? event : closestEvent;
       });
-      roadEventMap.roadEvents.remove(selectedRoadEvent);
-      reportEvent = selectedRoadEvent.toReportEvent();
+      setState(() {
+        roadEventMap.roadEvents.remove(selectedRoadEvent);
+        reportEvent = selectedRoadEvent.toReportEvent();
+      });
     }
   }
 
-  ReportMode mode = ReportMode.submitting;
-
-  int selectedRoadEventId;
-
   void onRemoveRoadEvent() {
-    if (selectedRoadEventId != null) {
-      setState(() {
-        showConfirmationDialog(
-          context: context,
-          title: "Remove Road Event",
-          content: "Are you sure you want to remove the road event?",
-          onYesPressed: () {
-            Server.deleteRoadEvent(selectedRoadEventId);
-            selectedRoadEventId = null;
-          },
-        );
-      });
+    if (selectedRoadEvent != null) {
+      showConfirmationDialog(
+        context: context,
+        title: "Remove Road Event",
+        content: "Are you sure you want to remove the road event?",
+        onYesPressed: () async {
+          await Server.deleteRoadEvent(selectedRoadEvent.id);
+          setState(() {
+            selectedRoadEvent = null;
+            reportEvent = ReportEvent();
+          });
+        },
+      );
     }
   }
 
@@ -83,15 +85,25 @@ class ReportPageState extends State<ReportPage> {
     }
   }
 
+  void onCancelPressed() {
+    if (selectedRoadEvent != null) {
+      roadEventMap.roadEvents.add(selectedRoadEvent);
+    }
+    setState(() {
+      reportEvent = ReportEvent();
+    });
+  }
+
   void onSubmitEventPressed() {
     if (reportEvent.points.length > 1) {
       showConfirmationDialog(
         context: context,
         title: "Create Event",
         content: "Are you sure you want to create the road event?",
-        onYesPressed: () {
+        onYesPressed: () async {
           reportEvent.startTime = DateTime.now().toUtc();
-          Server.uploadRoadEvent(reportEvent);
+          await Server.uploadRoadEvent(reportEvent);
+          await roadEventMap.updateEvents(roadEventMap.controller.bounds);
           setState(() {
             reportEvent = ReportEvent();
           });
@@ -106,18 +118,19 @@ class ReportPageState extends State<ReportPage> {
   }
 
   void onUpdateEventPressed() {
-    if (reportEvent.points.length > 1) {
+    if (reportEvent.points.length > 1 && selectedRoadEvent != null) {
       showConfirmationDialog(
         context: context,
         title: "Update Road Event",
         content: "Are you sure you want to update the road event?",
-        onYesPressed: () {
+        onYesPressed: () async {
           reportEvent.startTime = DateTime.now().toUtc();
-          Server.uploadRoadEvent(reportEvent);
-          Server.deleteRoadEvent(selectedRoadEventId);
+          await Server.deleteRoadEvent(selectedRoadEvent.id);
+          await Server.uploadRoadEvent(reportEvent);
+          await roadEventMap.updateEvents(roadEventMap.controller.bounds);
           setState(() {
             reportEvent = ReportEvent();
-            selectedRoadEventId = null;
+            selectedRoadEvent = null;
           });
         },
       );
@@ -132,10 +145,21 @@ class ReportPageState extends State<ReportPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: MapAppBar(
-        roadEventMap: roadEventMap,
-        title: "Report",
-      ),
+      appBar: AppBar(title: Text("Report"), actions: <Widget>[
+        FlatButton(
+            onPressed: () {
+              setState(() {
+                roadEventMap.centerMap();
+              });
+            },
+            child: Row(children: <Widget>[
+              Icon(Icons.gps_fixed, color: Colors.white),
+              Text(
+                "Center Map",
+                style: TextStyle(color: Colors.white),
+              )
+            ])),
+      ]),
       drawer: buildDrawer(context, ReportPage.route),
       body: Padding(
         padding: EdgeInsets.all(8.0),
@@ -189,6 +213,11 @@ class ReportPageState extends State<ReportPage> {
                   onPressed: () {
                     setState(() {
                       mode = ReportMode.submitting;
+                      if (selectedRoadEvent != null) {
+                        roadEventMap.roadEvents.add(selectedRoadEvent);
+                        selectedRoadEvent = null;
+                        reportEvent = ReportEvent();
+                      }
                     });
                   },
                 ),
@@ -198,6 +227,7 @@ class ReportPageState extends State<ReportPage> {
                   onPressed: () {
                     setState(() {
                       mode = ReportMode.editing;
+                      reportEvent = ReportEvent();
                     });
                   },
                 ),
@@ -209,7 +239,7 @@ class ReportPageState extends State<ReportPage> {
                 options: MapOptions(
                     onTap: onTap,
                     onPositionChanged: (position, hasGesture) async {
-                      await roadEventMap.updateEvents(position);
+                      await roadEventMap.checkForUpdate(position.bounds);
                       setState(() {});
                     }),
                 layers: [
@@ -267,6 +297,23 @@ class ReportPageState extends State<ReportPage> {
                   ],
                 ),
               ),
+              FlatButton(
+                color: Colors.blue,
+                onPressed: onCancelPressed,
+                padding: EdgeInsets.all(8.0),
+                child: Row(
+                  children: <Widget>[
+                    Icon(
+                      Icons.cancel,
+                      color: Colors.white,
+                    ),
+                    Text(
+                      'Cancel',
+                      style: TextStyle(color: Colors.white),
+                    )
+                  ],
+                ),
+              ),
             ]),
             Row(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -310,7 +357,7 @@ class ReportPageState extends State<ReportPage> {
                         ),
                         FlatButton(
                           color: Colors.blue,
-                          onPressed: onSubmitEventPressed,
+                          onPressed: onUpdateEventPressed,
                           padding: EdgeInsets.all(8.0),
                           child: Row(
                             children: <Widget>[

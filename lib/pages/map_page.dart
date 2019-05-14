@@ -7,9 +7,8 @@ import '../drawer.dart';
 import 'package:latlong/latlong.dart';
 import 'package:lfdl_app/server.dart';
 import 'package:lfdl_app/utils.dart';
-import 'package:lfdl_app/widgets/map_app_bar.dart';
 import 'package:lfdl_app/road_event_map.dart';
-
+import 'dart:async';
 
 //Map display page
 class MapPage extends StatefulWidget {
@@ -20,19 +19,34 @@ class MapPage extends StatefulWidget {
 }
 
 class MapPageState extends State<MapPage> {
-
   final roadEventMap = RoadEventMap();
 
   @override
   void initState() {
     super.initState();
-//    roadEventMap.centerMap();
+    roadEventMap.centerMap().then((e) {
+      setState(() {});
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: MapAppBar(roadEventMap: roadEventMap, title: "Map"),
+      appBar: AppBar(title: Text("Map"), actions: <Widget>[
+        FlatButton(
+            onPressed: () {
+              setState(() {
+                roadEventMap.centerMap();
+              });
+            },
+            child: Row(children: <Widget>[
+              Icon(Icons.gps_fixed, color: Colors.white),
+              Text(
+                "Center Map",
+                style: TextStyle(color: Colors.white),
+              )
+            ])),
+      ]),
       drawer: buildDrawer(context, MapPage.route),
       body: Scrollbar(
           child: Padding(
@@ -40,23 +54,23 @@ class MapPageState extends State<MapPage> {
         child: Column(
           children: [
             Flexible(
-              child: FlutterMap(
-                mapController: roadEventMap.controller,
-                options: MapOptions(onPositionChanged: (position, hasGesture) async {
-                  await roadEventMap.updateEvents(position);
-                  setState(() {});
-                }),
-                layers: [
-                  TileLayerOptions(
-                      urlTemplate:
-                      "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-                      subdomains: ['a', 'b', 'c']),
-                  PolylineLayerOptions(
-                    polylines: roadEventMap.polylines,
-                  ),
-                ],
-              )
-            ),
+                child: FlutterMap(
+              mapController: roadEventMap.controller,
+              options:
+                  MapOptions(onPositionChanged: (position, hasGesture) async {
+                await roadEventMap.checkForUpdate(position.bounds);
+                setState(() {});
+              }),
+              layers: [
+                TileLayerOptions(
+                    urlTemplate:
+                        "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+                    subdomains: ['a', 'b', 'c']),
+                PolylineLayerOptions(
+                  polylines: roadEventMap.polylines,
+                ),
+              ],
+            )),
           ],
         ),
       )),

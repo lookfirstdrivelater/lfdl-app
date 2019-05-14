@@ -52,7 +52,7 @@ class RoadEvent {
       Polyline(points: points, color: eventColors[type], strokeWidth: 3.0);
 
   ReportEvent toReportEvent() => ReportEvent()
-    ..points = points
+    ..points = List.from(points)
     ..startTime = startTime
     ..type = type
     ..severity = severity;
