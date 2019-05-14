@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lfdl_app/pages/map_page.dart';
-import 'package:lfdl_app/pages/test_page.dart';
 import 'package:lfdl_app/pages/report_page.dart';
+import 'package:lfdl_app/pages/about_page.dart';
 
 Drawer buildDrawer(BuildContext context, String currentRoute) {
   return new Drawer(
@@ -27,10 +27,10 @@ Drawer buildDrawer(BuildContext context, String currentRoute) {
           },
         ),
         new ListTile(
-          title: const Text('Test'),
-          selected: currentRoute == TestPage.route,
+          title: const Text('About'),
+          selected: currentRoute == AboutPage.route,
           onTap: () {
-            Navigator.pushReplacementNamed(context, TestPage.route);
+            Navigator.pushReplacementNamed(context, AboutPage.route);
           },
         ),
       ],

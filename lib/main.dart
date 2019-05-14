@@ -7,8 +7,8 @@ import 'package:lfdl_app/gps.dart';
 import 'dart:convert';
 import 'dart:io';
 import 'package:lfdl_app/pages/map_page.dart';
-import 'package:lfdl_app/pages/test_page.dart';
 import 'package:lfdl_app/pages/report_page.dart';
+import 'package:lfdl_app/pages/about_page.dart';
 
 
 void main() => runApp(MyApp());
@@ -18,7 +18,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: "Look First Drive Later",
       theme: ThemeData(
         // This is the theme of your application.
         //
@@ -32,9 +32,9 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.blue,
       ),
       home: MapPage(),
-      routes: <String, WidgetBuilder>{
+      routes: <String, WidgetBuilder> {
         ReportPage.route: (context) => ReportPage(),
-        TestPage.route: (context) => TestPage(),
+        AboutPage.route: (context) => AboutPage()
       },
     );
   }

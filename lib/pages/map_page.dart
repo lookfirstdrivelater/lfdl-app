@@ -1,10 +1,14 @@
 import 'package:flutter_map/flutter_map.dart';
 import 'package:lfdl_app/gps.dart';
 import 'package:flutter/widgets.dart';
-import 'package:lfdl_app/road_event.dart';
+import 'package:lfdl_app/events.dart';
 import 'package:flutter/material.dart';
 import '../drawer.dart';
 import 'package:latlong/latlong.dart';
+import 'package:lfdl_app/server.dart';
+import 'package:lfdl_app/utils.dart';
+import 'package:lfdl_app/road_event_map.dart';
+import 'dart:async';
 
 //Map display page
 class MapPage extends StatefulWidget {
@@ -15,50 +19,61 @@ class MapPage extends StatefulWidget {
 }
 
 class MapPageState extends State<MapPage> {
-  final mapController = MapController();
-  FlutterMap _map;
-  GPS gps = GPS();
+  final roadEventMap = RoadEventMap();
 
-  void center() async {
-    final position = await gps.location();
-    mapController.move(position, 10.0);
+  @override
+  void initState() {
+    super.initState();
+    roadEventMap.centerMap().then((e) {
+      setState(() {});
+    });
   }
-
-//  void addLine(RoadLine line) {
-//    ;
-//  }
 
   @override
   Widget build(BuildContext context) {
-    return new Scaffold(
-      appBar: new AppBar(title: new Text("Home")),
+    return Scaffold(
+      appBar: AppBar(title: Text("Map"), actions: <Widget>[
+        FlatButton(
+            onPressed: () {
+              setState(() {
+                roadEventMap.centerMap();
+              });
+            },
+            child: Row(children: <Widget>[
+              Icon(Icons.gps_fixed, color: Colors.white),
+              Text(
+                "Center Map",
+                style: TextStyle(color: Colors.white),
+              )
+            ])),
+      ]),
       drawer: buildDrawer(context, MapPage.route),
-      body: new Padding(
-        padding: new EdgeInsets.all(8.0),
-        child: new Column(
+      body: Scrollbar(
+          child: Padding(
+        padding: EdgeInsets.all(8.0),
+        child: Column(
           children: [
-            new Padding(
-              padding: new EdgeInsets.only(top: 8.0, bottom: 8.0),
-              child: new Text("This is a map that is showing (51.5, -0.9)."),
-            ),
-            new Flexible(
-              child: new FlutterMap(
-                mapController: mapController,
-                options: MapOptions(
-                  center: LatLng(51.5, -0.09),
-                  zoom: 5.0,
+            Flexible(
+                child: FlutterMap(
+              mapController: roadEventMap.controller,
+              options:
+                  MapOptions(onPositionChanged: (position, hasGesture) async {
+                await roadEventMap.checkForUpdate(position.bounds);
+                setState(() {});
+              }),
+              layers: [
+                TileLayerOptions(
+                    urlTemplate:
+                        "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+                    subdomains: ['a', 'b', 'c']),
+                PolylineLayerOptions(
+                  polylines: roadEventMap.polylines,
                 ),
-                layers: [
-                  TileLayerOptions(
-                      urlTemplate:
-                          "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-                      subdomains: ['a', 'b', 'c']),
-                ],
-              ),
-            ),
+              ],
+            )),
           ],
         ),
-      ),
+      )),
     );
   }
 }
