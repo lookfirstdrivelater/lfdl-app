@@ -8,6 +8,7 @@ import 'package:lfdl_app/gps.dart';
 import 'package:lfdl_app/server.dart';
 import 'package:lfdl_app/utils.dart';
 import 'package:flutter/material.dart';
+import 'utils.dart';
 
 class RoadEventMap {
   final controller = MapController();
@@ -17,7 +18,7 @@ class RoadEventMap {
   ReportEvent reportEvent = ReportEvent();
 
   List<Polyline> get polylines =>
-      roadEvents.map((event) => event.polyline).toList();
+      roadEvents.map((event) => event.polyline).toList()..add(reportEvent.polyline);
 
   List<CircleMarker> get circleMarkers => reportEvent.points
       .map((point) => CircleMarker(
@@ -32,46 +33,48 @@ class RoadEventMap {
     await updateEvents(controller.bounds);
   }
 
-  RoadEvent selectEvent(LatLng tappedPoint) {
+  Future<void> selectEvent(LatLng tappedPoint) async {
     if (roadEvents.isNotEmpty) {
-      double minDistance = double.infinity;
+      double minDistance = smallestDistance(roadEvents.first, tappedPoint);
       selectedRoadEvent = roadEvents.reduce((closestEvent, event) {
-        final eventMinDistance = event.points.fold<double>(
-            double.infinity,
-                (minDistance, point) =>
-                min(minDistance, distanceBetween(point, tappedPoint)));
-        return eventMinDistance < minDistance ? event : closestEvent;
+        final eventMinDistance = smallestDistance(event, tappedPoint);
+        if(eventMinDistance < minDistance) {
+          minDistance = eventMinDistance;
+          return event;
+        } else {
+          return closestEvent;
+        }
       });
       reportEvent = selectedRoadEvent.toReportEvent();
-      updateEvents(controller.bounds);
+      await updateEvents(controller.bounds);
     }
   }
 
 Future<void> checkForUpdate(LatLngBounds bounds) {
   if (extendedBounds == null) {
-    setExtendedBounds(bounds);
+    updateEvents(bounds);
   } else if (extendedBounds.containsBounds(bounds) == false) {
     updateEvents(bounds);
   }
 }
 
-Future<void> updateEvents(LatLngBounds bounds) async {
+Future<void> updateEventsa(LatLngBounds bounds) async {
   if (bounds.north - bounds.south < 10.0 &&
       bounds.west - bounds.east < 10.0) {
-    setExtendedBounds(bounds);
+    updateEvents(bounds);
   } else {
-    roadEvents.clear();
+//    roadEvents.clear();
   }
 }
 
-Future<void> setExtendedBounds(LatLngBounds bounds) async {
+Future<void> updateEvents(LatLngBounds bounds) async {
   extendedBounds = extendBounds(bounds);
   final events = await Server.queryRoadEvents(
       extendedBounds.north, extendedBounds.east, extendedBounds.south,
       extendedBounds.west);
   print("Queried events: ${events.join("\n\t")}");
-  roadEvents = events;
   if (selectedRoadEvent != null) {
     roadEvents.remove(selectedRoadEvent);
   }
+  roadEvents = events;
 }}

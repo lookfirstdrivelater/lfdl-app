@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'events.dart';
 
 const numberPattern = r'-?\d{1,3}(?:\.\d+)?';
 
@@ -49,13 +50,26 @@ LatLngBounds extendBounds(LatLngBounds bounds) {
   }
 }
 
-LatLng subtract(LatLng point1, LatLng point2) => LatLng(point1.latitude - point2.latitude, point1.longitude - point2.longitude);
+LatLng subtract(LatLng point1, LatLng point2) => LatLng(
+    point1.latitude - point2.latitude, point1.longitude - point2.longitude);
 
-LatLng add(LatLng point1, LatLng point2) => LatLng(point1.latitude + point2.latitude, point1.longitude + point2.longitude);
+LatLng add(LatLng point1, LatLng point2) => LatLng(
+    point1.latitude + point2.latitude, point1.longitude + point2.longitude);
 
-LatLng multiply(LatLng point1, double scaler) => LatLng(point1.latitude * scaler, point1.longitude * scaler);
+LatLng multiply(LatLng point1, double scaler) =>
+    LatLng(point1.latitude * scaler, point1.longitude * scaler);
 
-LatLng safeLatLng(double latitude, double longitude) => LatLng(max(min(latitude, -90.0), 90.0), max(min(longitude, -180.0), 180.0));
+LatLng safeLatLng(double latitude, double longitude) =>
+    LatLng(max(min(latitude, -90.0), 90.0), max(min(longitude, -180.0), 180.0));
+
+double distanceBetween(LatLng point1, LatLng point2) =>
+    sqrt(pow(point1.longitude - point2.longitude, 2) +
+        pow(point1.latitude - point2.latitude, 2));
+
+double smallestDistance(RoadEvent event, tappedPoint) => event.points.fold<double>(
+    double.infinity,
+    (minDistance, point) =>
+        min(minDistance, distanceBetween(point, tappedPoint)));
 
 final capsMatcher = RegExp("[A-Z]");
 
@@ -65,12 +79,11 @@ String camelCaseToSpaceCase(String camelCase) =>
         .substring(1)
         .replaceAllMapped(capsMatcher, (match) => " ${match[0]}");
 
-double distanceBetween(LatLng point1, LatLng point2) => sqrt((point1.longitude -
-            point2.longitude) *
-        (point1.longitude - point2.longitude) +
-    (point1.latitude - point2.latitude) * (point1.latitude - point2.latitude));
-
-void showConfirmationDialog({BuildContext context, String title, String content, Function onYesPressed}) {
+void showConfirmationDialog(
+    {BuildContext context,
+    String title,
+    String content,
+    Function onYesPressed}) {
   showDialog(
     context: context,
     builder: (BuildContext context) {
@@ -81,12 +94,11 @@ void showConfirmationDialog({BuildContext context, String title, String content,
         actions: <Widget>[
           // usually buttons at the bottom of the dialog
           FlatButton(
-            child: Text("Yes"),
-            onPressed: () {
-              onYesPressed();
-              Navigator.of(context).pop();
-            }
-          ),
+              child: Text("Yes"),
+              onPressed: () {
+                onYesPressed();
+                Navigator.of(context).pop();
+              }),
           FlatButton(
             child: Text("No"),
             onPressed: () {
@@ -113,8 +125,7 @@ void showErrorDialog({BuildContext context, String content}) {
               child: Text("Close"),
               onPressed: () {
                 Navigator.of(context).pop();
-              }
-          ),
+              }),
         ],
       );
     },

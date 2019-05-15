@@ -23,28 +23,69 @@ class MapPage extends StatefulWidget {
 
 class MapPageState extends State<MapPage> {
   final roadEventMap = RoadEventMap();
+  Timer timer;
 
   @override
   void initState() {
     super.initState();
+    timer = Timer.periodic(Duration(seconds: 5), (timer) async {
+      await roadEventMap.updateEvents(roadEventMap.controller.bounds);
+      setState(() {});
+    });
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       await roadEventMap.centerMap();
-      setState(() {
-
-      });
+      setState(() {});
     });
   }
 
-  void onTap(LatLng tappedPoint) {
-    setState(() {
-      roadEventMap.selectEvent(tappedPoint);
-    });
+  @override
+  void dispose() {
+    timer?.cancel();
+    super.dispose();
+  }
+
+  Future<void> onTap(LatLng tappedPoint) async {
+    await roadEventMap.selectEvent(tappedPoint);
+    setState(() {});
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text("Map"), actions: <Widget>[
+        FlatButton(
+          onPressed: () {
+            showDialog(
+              context: context,
+              builder: (BuildContext context) {
+                // return object of type Dialog
+                return AlertDialog(
+                  title: Text("Help"),
+                  content: SingleChildScrollView(
+                      child: Column(children: [
+                    Text("This page is for viewing road events.\n"
+                        "To view more information on a road event, simply tap on the map near the event you want to view and the information will be shown above\n"),
+                  ])),
+                  actions: <Widget>[
+                    // usually buttons at the bottom of the dialog
+                    FlatButton(
+                        child: Text("Ok"),
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                        }),
+                  ],
+                );
+              },
+            );
+          },
+          child: Row(children: <Widget>[
+            Icon(Icons.help, color: Colors.white),
+            Text(
+              "Help",
+              style: TextStyle(color: Colors.white),
+            )
+          ]),
+        ),
         FlatButton(
             onPressed: () {
               setState(() {
@@ -75,7 +116,7 @@ class MapPageState extends State<MapPage> {
                       Text(
                           "Submitted Time: ${formatter.format(roadEventMap.selectedRoadEvent.startTime.toLocal())}"),
                       Text(
-                          "Expire Time: ${formatter.format(roadEventMap.selectedRoadEvent.startTime.toLocal())}")
+                          "Expire Time: ${formatter.format(roadEventMap.selectedRoadEvent.endTime.toLocal())}")
                     ]
                   : [],
             ),
@@ -98,9 +139,11 @@ class MapPageState extends State<MapPage> {
                 ),
                 CircleLayerOptions(
                   circles: roadEventMap.circleMarkers,
-                )
+                ),
               ],
             )),
+            Image.asset('assets/map_legend.png'),
+            // ...,
           ],
         ),
       )),

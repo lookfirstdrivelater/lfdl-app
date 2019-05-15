@@ -8,6 +8,7 @@ import 'package:lfdl_app/server.dart';
 import 'package:lfdl_app/utils.dart';
 import 'dart:math';
 import 'package:lfdl_app/road_event_map.dart';
+import 'dart:async';
 
 //Self-reporting page
 class ReportPage extends StatefulWidget {
@@ -20,25 +21,36 @@ class ReportPage extends StatefulWidget {
 class ReportPageState extends State<ReportPage> {
   RoadEventMap roadEventMap = RoadEventMap();
   ReportMode mode = ReportMode.submitting;
+  Timer timer;
 
   @override
   void initState() {
     super.initState();
-    roadEventMap.centerMap().then((e) {
+    timer = Timer.periodic(Duration(seconds: 3), (timer) async {
+      await roadEventMap.updateEvents(roadEventMap.controller.bounds);
+      setState(() {});
+    });
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await roadEventMap.centerMap();
       setState(() {});
     });
   }
 
-  void onTap(LatLng tappedPoint) {
+  @override
+  void dispose() {
+    timer?.cancel();
+    super.dispose();
+  }
+
+  Future<void> onTap(LatLng tappedPoint) async {
     if (mode == ReportMode.submitting ||
         roadEventMap.selectedRoadEvent != null) {
       setState(() {
         roadEventMap.reportEvent.points.add(tappedPoint);
       });
     } else if (mode == ReportMode.editing) {
-      setState(() {
-        roadEventMap.selectEvent(tappedPoint);
-      });
+      await roadEventMap.selectEvent(tappedPoint);
+      setState(() {});
     }
   }
 
@@ -139,6 +151,57 @@ class ReportPageState extends State<ReportPage> {
     return Scaffold(
       appBar: AppBar(title: Text("Report"), actions: <Widget>[
         FlatButton(
+          onPressed: () {
+            showDialog(
+              context: context,
+              builder: (BuildContext context) {
+                // return object of type Dialog
+                return AlertDialog(
+                  title: Text("Help"),
+                  content: SingleChildScrollView(
+                      child: Column(children: [
+                    Text(
+                        "This page is for submitting and editing road events.\n"),
+                    Text("For submitting:\n"
+                        "First start by selecting the type of event that best corresponds with the road conditions\n"
+                        "Then select the severity of the event\n"
+                        "Low corresponds to an expiration time of one day\n"
+                        "Medium corresponds to an expiration time of two days\n"
+                        "High corresponds to an expiration time of three days\n"
+                        "Then tap the map to select the roads that the event applies to\n\n"),
+                    Text("For editing:\n"
+                        "First click the 'editing' button at the top to switch to editing mode\n"
+                        "Then select a road event on the map to edit\n"
+                        "Then either edit the event by selecting different roads or changing the type or severity or delete the event if the road conditions have been fixed\n\n"),
+                    Text("Buttons:\n"
+                        "Undo: remove the previously added road point\n"
+                        "Clear Points: remove all points that are selected to be submitted or edited\n"
+                        "Cancle: cancles submittion or edit of road event\n"
+                        "Submit: upload the road event so everyone can view it\n"
+                        "Remove Event: deletes the event so it will not show on the map (use this if the road conditions have improved)\n"
+                        "Update Event: reuploads road event that is being edited (use this if you made a mistake submitting an event)")
+                  ])),
+                  actions: <Widget>[
+                    // usually buttons at the bottom of the dialog
+                    FlatButton(
+                        child: Text("Ok"),
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                        }),
+                  ],
+                );
+              },
+            );
+          },
+          child: Row(children: <Widget>[
+            Icon(Icons.help, color: Colors.white),
+            Text(
+              "Help",
+              style: TextStyle(color: Colors.white),
+            )
+          ]),
+        ),
+        FlatButton(
             onPressed: () {
               setState(() {
                 roadEventMap.centerMap();
@@ -208,7 +271,8 @@ class ReportPageState extends State<ReportPage> {
                       if (roadEventMap.selectedRoadEvent != null) {
                         roadEventMap.selectedRoadEvent = null;
                         roadEventMap.reportEvent = ReportEvent();
-                        roadEventMap.updateEvents(roadEventMap.controller.bounds);
+                        roadEventMap
+                            .updateEvents(roadEventMap.controller.bounds);
                       }
                     });
                   },
@@ -249,6 +313,7 @@ class ReportPageState extends State<ReportPage> {
                 ],
               ),
             ),
+            Image.asset("assets/map_legend.png"),
             Row(mainAxisAlignment: MainAxisAlignment.center, children: [
               FlatButton(
                 color: Colors.blue,

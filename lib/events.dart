@@ -52,9 +52,9 @@ class RoadEvent {
   Polyline get polyline => Polyline(
       points: points,
       color: eventColors[type],
-      strokeWidth: 3.0,
+      strokeWidth: 5.0,
       borderColor: Colors.black,
-  borderStrokeWidth: 1.0);
+      borderStrokeWidth: 1.0);
 
   ReportEvent toReportEvent() => ReportEvent()
     ..points = List.from(points)
@@ -107,7 +107,9 @@ class ReportEvent {
       points.length;
 
   Polyline get polyline =>
-      Polyline(points: points, color: eventColors[type], strokeWidth: 5.0);
+      Polyline(points: points, color: eventColors[type], strokeWidth: 7.0,
+      borderStrokeWidth: 1.0,
+      borderColor: Colors.black);
 
   @override
   String toString() =>
@@ -115,10 +117,10 @@ class ReportEvent {
 }
 
 const eventColors = <EventType, Color>{
-  EventType.snow: Color(0xFFFFFFFF),
-  EventType.blackIce: Color(0xFF000000),
-  EventType.slush: Color(0xFFFFFF99),
-  EventType.ice: Color(0xFF99FFFF)
+  EventType.snow: Colors.orange,
+  EventType.blackIce: Colors.purple,
+  EventType.slush: Colors.pink,
+  EventType.ice: Colors.cyan
 };
 
 String _enumToString(dynamic enumeration) {
